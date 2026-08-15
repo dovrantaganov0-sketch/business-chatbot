@@ -115,30 +115,38 @@ export async function aiGenerateDesign(design = {}) {
 
     const logoPrompt =
       `Kompaniýa: "${name}". Ugur: ${industry}. Esasy reňk: ${color}. Islenýän stil: ${styleHint}. ` +
-      `"${name}" atly kompaniýa üçin professional brend logo döret, viewBox="0 0 400 160" ölçegli. ` +
-      `Logoda aşakdakylar bolmaly: (a) kompaniýanyň nyşany/markasy — ${styleHint} stilinde, ` +
-      `(b) kompaniýa adynyň doly we takyk ýazgysy, (c) kiçi ugur ýa-da slogan ýazgysy (${industry} bilen bagly). ` +
-      `Logo açyk fonda we karan reňkde gowy görünmeli, size bagly bolmadyk ölçeglere (viewBox) gabat gelýär. ` +
-      `Şrift saýlamasy, agram we harp aralygy bilen oýnam. Hasaplamany ýatda sakla: şrift adyňy Arial, Helvetica, Georgia ýa-da generic serif/sans-serif edip goý.`
+      `"${name}" atly kompaniýa üçin owadan, zynjyryna ýetýän professional brend logo döret, viewBox="0 0 400 160" ölçegli. ` +
+      `Logoda aşakdakylar bolmaly: ` +
+      `(a) Emblema/nyşan — düşnükli we ýatda galýan, geometrik şekiller, çyzyklar, tegelekler ýa-da gradiýentler bilen gurlan, ${styleHint} stilinde. ` +
+      `(b) Kompaniýa adynyň doly we takyk ýazgysy — owadan şrift, dogry harp aralygy (letter-spacing). ` +
+      `(c) Kiçi ugur ýa-da slogan ýazgysy (${industry} bilen bagly), has kiçi we aşakda. ` +
+      `Wizualla kömek etmek üçin: gradýentler, şeffaflyk (opacity), dekoratiw nokatlar/çyzyklar we arassa negative space ulanyň. ` +
+      `Logo ajaýyp görünmeli: döwrebap, arassa we professional, logo banklarynda bolşy ýaly. ` +
+      `Kompaniýa adyny we ähli tekstleri doly we takyk ýaz. ` +
+      `Şrift adyny Arial, Helvetica, "Trebuchet MS", Georgia ýa-da generic serif/sans-serif edip goý — beýlekileri goşma.`
 
     const cardPrompt =
       `Kompaniýa: "${name}". Ugur: ${industry}. Esasy reňk: ${color}. Wizitka stili: ${card_style}. ` +
       (contact ? `Telefon: ${contact}. ` : '') +
       (email ? `E-poçta: ${email}. ` : '') +
       (ig ? `Instagram: ${ig}. ` : '') +
-      `Professional wizitkanyň ÖŇ tarapyny döret, viewBox="0 0 400 240" ölçegli. ` +
+      `Professional, owadan wizitkanyň ÖŇ tarapyny döret, viewBox="0 0 400 240" ölçegli. ` +
       `Wizitkada bolmaly: (a) kompaniýanyň ady doly we aýdyň, (b) ugry ýa-da kiçi slogan, ` +
       (contact || email || ig
         ? `(c) konta maglumatlar (diňe ${[contact, email, ig].filter(Boolean).join(', ')} — başga hiç zat goşma). `
         : '(c) kompaniýanyň nyşany/monogramy. ') +
       `Stil: döwrebap, ýokary hilli, doly ýerleşdirlen kompozisiýa. ` +
-      `Şrift agramlary, harp aralygy we reňk kontrasty bilen professional görnüş ber. Biziň ýa-da üçünji tarapyň maglumatlaryny goşma.`
+      `Owadan şrift, reňk kontrasty, gradýentler we dekoratiw elementler bilen premium görnüş ber. ` +
+      `Kart 400x240 ölçegden daşary çykmadyk bolsun, tekstler kesilmesin. ` +
+      `Biziň ýa-da üçünji tarapyň maglumatlaryny goşma.`
 
     const backPrompt =
       `Kompaniýa: "${name}". Ugur: ${industry}. Esasy reňk: ${color}. ` +
       `Wizitkanyň ARKA tarapyny döret, viewBox="0 0 400 240" ölçegli. ` +
-      `Arka tarapda: (a) kompaniýanyň monogramy ýa-da nyşany, (b) kompaniýanyň ady, (c) ugry ýa-da slogan. ` +
+      `Arka tarapda: (a) kompaniýanyň monogramy ýa-da nyşany — owadan, dekoratiw we ortada, ` +
+      `(b) kompaniýanyň ady, (c) ugry ýa-da slogan. ` +
       `Dizaýn öňi bilen sazlaşykly, emma arka tarap has ýönekeý we estetiki bolmaly. ` +
+      `Gradýentler, şeffaflyk we dekoratiw şekiller ulanyň. ` +
       `Şrift we reňk saýlamasy professional. Biziň ýa-da üçünji tarapyň maglumatlaryny goşma.`
 
     const [logo, cardFront, cardBack] = await Promise.all([
