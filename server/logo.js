@@ -14,6 +14,18 @@ const INDUSTRY_LABELS = {
   Saglyk: 'SAGLYGY GORAMAK',
   'Iýmit': 'IÝMIT ÖNÜMLERI',
   Gurluşyk: 'GURLUŞYK WE LAHYY',
+  Suratçylyk: 'FOTO WE WIDEO',
+  'Wideooperator': 'FOTO WE WIDEO',
+  Studio: 'STUDIO',
+  Dizaýn: 'DIZAÝN WE KREATIW',
+  Atelýe: 'ATELÝE WE TIKINÇILIK',
+  Gözellik: 'GÖZELLIK SALONY',
+  Sport: 'SPORT WE SAĞDYKLYK',
+  Bilim: 'BILIM WE OKUW',
+  Turizm: 'TURIZM WE SYÝAHAT',
+  Awto: 'AWTO WE SERWIS',
+  Restoran: 'RESTORAN WE KOFE',
+  Mebel: 'MEBEL ÖNÜMÇILIK',
   Beýleki: 'HYZMATLAR',
 }
 
