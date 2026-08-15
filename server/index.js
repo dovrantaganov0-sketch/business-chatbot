@@ -221,7 +221,7 @@ function initials(s = '') {
 }
 
 function fontStack() {
-  return 'Arial, Helvetica, "Segoe UI", sans-serif'
+  return 'Arial, Helvetica, "Segoe UI", sans-serif'.replace(/"/g, '&quot;')
 }
 
 function overlayRect(w, h, opacity) {
