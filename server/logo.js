@@ -401,12 +401,19 @@ const CARD_STYLES = {
   minimal: cardMinimal,
 }
 
+function fit(inner, dw, dh, tw, th) {
+  const s = Math.min(tw / dw, th / dh)
+  const tx = Math.round((tw - dw * s) / 2)
+  const ty = Math.round((th - dh * s) / 2)
+  return `<g transform="translate(${tx} ${ty}) scale(${s})">${inner}</g>`
+}
+
 export function generateLogo(order = {}, opts = {}) {
   const { final = false, variant = 0 } = opts
   const style = LOGO_STYLES[order.style] || LOGO_STYLES.monogram
-  const inner = style(order, variant)
+  const inner = fit(style(order, variant), 400, 160, 850, 850)
   let svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 160" width="800" height="320">` +
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 850" width="850" height="850">` +
     `<defs>${gradientDef('g', COLORS[order.color] || COLORS.Fiolet, '1 1', variant)}</defs>` +
     inner +
     '</svg>'
@@ -417,9 +424,9 @@ export function generateLogo(order = {}, opts = {}) {
 export function generateCard(order = {}, opts = {}) {
   const { final = false, variant = 0 } = opts
   const style = CARD_STYLES[order.card_style] || CARD_STYLES.dark
-  const inner = style(order, variant)
+  const inner = fit(style(order, variant), 400, 240, 850, 550)
   let svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240" width="800" height="480">` +
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 550" width="850" height="550">` +
     `<defs>${gradientDef('g', COLORS[order.color] || COLORS.Fiolet, '1 1', variant)}</defs>` +
     inner +
     '</svg>'
@@ -454,9 +461,9 @@ function cardBack({ name, industry, color, card_style, variant = 0, phone = '', 
 
 export function generateCardBack(order = {}, opts = {}) {
   const { final = false, variant = 0 } = opts
-  const inner = cardBack(order, variant)
+  const inner = fit(cardBack(order, variant), 400, 240, 850, 550)
   let svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240" width="800" height="480">` +
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 550" width="850" height="550">` +
     `<defs>${gradientDef('g', COLORS[order.color] || COLORS.Fiolet, '1 1', variant)}</defs>` +
     inner +
     '</svg>'

@@ -228,18 +228,28 @@ function overlayRect(w, h, opacity) {
   return `<rect x="0" y="0" width="${w}" height="${h}" fill="#0b0d12" opacity="${opacity}"/>`
 }
 
-function watermark() {
+function watermark(vw, vh) {
+  const cx = vw / 2
+  const cy = vh / 2
+  const fs = Math.round(vw / 24)
+  const fs2 = Math.round(vw / 48)
   return (
     '<g opacity="0.55">' +
-    '<text transform="rotate(-18 200 120)" x="200" y="112" font-family="Arial, sans-serif" font-weight="800" font-size="26" fill="#ff5c8a" text-anchor="middle">NUSGA · PREVIEW</text>' +
-    '<text transform="rotate(-18 200 120)" x="200" y="136" font-family="Arial, sans-serif" font-weight="700" font-size="13" fill="#ffffff" text-anchor="middle">TÖLEG SOŇUNDAN DOLY NUSGA</text>' +
+    `<text transform="rotate(-18 ${cx} ${cy})" x="${cx}" y="${cy - fs * 0.5}" font-family="Arial, sans-serif" font-weight="800" font-size="${fs}" fill="#ff5c8a" text-anchor="middle">NUSGA · PREVIEW</text>` +
+    `<text transform="rotate(-18 ${cx} ${cy})" x="${cx}" y="${cy + fs * 0.9}" font-family="Arial, sans-serif" font-weight="700" font-size="${fs2}" fill="#ffffff" text-anchor="middle">TÖLEG SOŇUNDAN DOLY NUSGA</text>` +
     '</g>'
   )
 }
 
-function pngBackgroundSVG(imgUrl, kind, cfg, final = false) {
-  const vw = 400
-  const vh = kind === 'logo' ? 160 : 240
+const DESIGN_SIZES = {
+  logo: { vw: 850, vh: 850 },
+  card: { vw: 850, vh: 550 },
+  cardBack: { vw: 850, vh: 550 },
+}
+
+function pngBackgroundSVG(imgDataUri, kind, cfg, final = false) {
+  const { vw, vh } = DESIGN_SIZES[kind] || DESIGN_SIZES.card
+  const cx = vw / 2
   const name = svgEsc(cfg.name || cfg.business_name || '')
   const industry = svgEsc(cfg.industry || '')
   const contactLines = [cfg.phone, cfg.email, cfg.instagram].filter(Boolean)
@@ -248,42 +258,42 @@ function pngBackgroundSVG(imgUrl, kind, cfg, final = false) {
   if (kind === 'logo') {
     inner.push(overlayRect(vw, vh, 0.38))
     inner.push(
-      `<text x="200" y="72" font-family="${fontStack()}" font-weight="800" font-size="40" fill="#ffffff" text-anchor="middle" letter-spacing="1">${name}</text>`
+      `<text x="${cx}" y="${Math.round(vh * 0.56)}" font-family="${fontStack()}" font-weight="800" font-size="64" fill="#ffffff" text-anchor="middle" letter-spacing="2">${name}</text>`
     )
     inner.push(
-      `<text x="200" y="104" font-family="${fontStack()}" font-weight="600" font-size="14" fill="#e2e8f0" letter-spacing="4" text-anchor="middle">${industry}</text>`
+      `<text x="${cx}" y="${Math.round(vh * 0.65)}" font-family="${fontStack()}" font-weight="600" font-size="22" fill="#e2e8f0" letter-spacing="6" text-anchor="middle">${industry}</text>`
     )
   } else if (kind === 'card') {
     inner.push(overlayRect(vw, vh, 0.45))
     inner.push(
-      `<text x="200" y="78" font-family="${fontStack()}" font-weight="800" font-size="34" fill="#ffffff" text-anchor="middle" letter-spacing="1">${name}</text>`
+      `<text x="${cx}" y="${Math.round(vh * 0.32)}" font-family="${fontStack()}" font-weight="800" font-size="52" fill="#ffffff" text-anchor="middle" letter-spacing="2">${name}</text>`
     )
     inner.push(
-      `<text x="200" y="106" font-family="${fontStack()}" font-weight="600" font-size="13" fill="#e2e8f0" letter-spacing="3" text-anchor="middle">${industry}</text>`
+      `<text x="${cx}" y="${Math.round(vh * 0.42)}" font-family="${fontStack()}" font-weight="600" font-size="20" fill="#e2e8f0" letter-spacing="4" text-anchor="middle">${industry}</text>`
     )
     if (contactLines.length) {
       inner.push(
-        `<text x="200" y="168" font-family="${fontStack()}" font-weight="500" font-size="12" fill="#f8fafc" text-anchor="middle">${svgEsc(contactLines.join('  ·  '))}</text>`
+        `<text x="${cx}" y="${Math.round(vh * 0.78)}" font-family="${fontStack()}" font-weight="500" font-size="19" fill="#f8fafc" text-anchor="middle">${svgEsc(contactLines.join('  ·  '))}</text>`
       )
     }
   } else {
     inner.push(overlayRect(vw, vh, 0.42))
     inner.push(
-      `<text x="200" y="108" font-family="${fontStack()}" font-weight="900" font-size="46" fill="#ffffff" text-anchor="middle" letter-spacing="2">${svgEsc(initials(name))}</text>`
+      `<text x="${cx}" y="${Math.round(vh * 0.42)}" font-family="${fontStack()}" font-weight="900" font-size="72" fill="#ffffff" text-anchor="middle" letter-spacing="3">${svgEsc(initials(name))}</text>`
     )
     inner.push(
-      `<text x="200" y="140" font-family="${fontStack()}" font-weight="700" font-size="16" fill="#e2e8f0" letter-spacing="2" text-anchor="middle">${name}</text>`
+      `<text x="${cx}" y="${Math.round(vh * 0.56)}" font-family="${fontStack()}" font-weight="700" font-size="26" fill="#e2e8f0" letter-spacing="3" text-anchor="middle">${name}</text>`
     )
     inner.push(
-      `<text x="200" y="164" font-family="${fontStack()}" font-weight="500" font-size="10" fill="#cbd5e1" letter-spacing="3" text-anchor="middle">${industry}</text>`
+      `<text x="${cx}" y="${Math.round(vh * 0.65)}" font-family="${fontStack()}" font-weight="500" font-size="15" fill="#cbd5e1" letter-spacing="4" text-anchor="middle">${industry}</text>`
     )
   }
 
   return (
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${vw} ${vh}" width="${vw * 2}" height="${vh * 2}">` +
-    `<image href="${imgUrl}" x="0" y="0" width="${vw}" height="${vh}" preserveAspectRatio="xMidYMid slice"/>` +
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${vw} ${vh}" width="${vw}" height="${vh}">` +
+    `<image href="${imgDataUri}" x="0" y="0" width="${vw}" height="${vh}" preserveAspectRatio="xMidYMid slice"/>` +
     inner.join('') +
-    (final ? '' : watermark()) +
+    (final ? '' : watermark(vw, vh)) +
     '</svg>'
   )
 }
@@ -304,8 +314,7 @@ function designAsset(order, kind, final = false) {
   const cfg = designConfig(order)
 
   if (images && images[kind]) {
-    const imgUrl = `/api/design/${order.id}/raw/${kind}`
-    return { type: 'image/svg+xml', body: pngBackgroundSVG(imgUrl, kind, cfg, final) }
+    return { type: 'image/svg+xml', body: pngBackgroundSVG(images[kind], kind, cfg, final) }
   }
   if (stored && stored[kind]) {
     const svg = sanitizeSVG(stored[kind])
