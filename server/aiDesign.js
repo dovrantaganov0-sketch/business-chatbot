@@ -26,9 +26,16 @@ async function callLLM(prompt, attempts = 3) {
             {
               role: 'system',
               content:
-                'Sen professional SVG dizaýneri. Soraýjynyň haýyşy boýunça DIŇE one-tag SVG kod gaytar. ' +
-                'Markdown blok belgilerini (```) ýazma, başga hiç zat ýazma, diňe <svg>...</svg>. ' +
-                'Kod dürli stil we döwrebap bolmaly. Teksti doly we takyk ýazmaly.',
+                'Sen AAAA derejeli professional SVG brend dizaýneri we tipografsy. ' +
+                'DIŇE bir sany doly, ulanylmaga taýýar <svg>...</svg> kody gaytar — başga hiç zat (markdown ```, düşündiriş, sözbaşy) ýazma. ' +
+                'Kod sintaktik dogry bolmaly: ähli atrıbutlar doly, tekstler &amp; &lt; &gt; bilen goragly, ýapylan tegler. ' +
+                'Dizaýn prinsipleri: ' +
+                '1) Açyk, deňagramly kompozisiýa — markanyň we tekstiniň arasynda howa (negative space). ' +
+                '2) Professional tipografiýa — şrift ölçegleri, agram (font-weight) we harp aralygy (letter-spacing) çuňňur pikirlen. ' +
+                '3) Reňk — berlen reňk gammasyny we onuň derňewini (light/dark) dogry ulanyň, gradient we şekil bilen çuňluk goşyň. ' +
+                '4) Döwrebap, minimal, ýöne hatyrdan galmajak dizaýn. ' +
+                'Kompaniýa ady we ähli tekstler DIŇE soraýjynyň beren maglumatlary — biziň ýa-da üçünji tarapyň maglumatlaryny goşma. ' +
+                'Teksti doly, takyk, ýalňyşsyz ýaz. Açyk tekst uzyn bolsa iki setir edip dogry ýerleşdir.',
             },
             { role: 'user', content: prompt },
           ],
@@ -93,22 +100,46 @@ export async function aiGenerateDesign(design = {}) {
   }
 
   try {
+    const styleHints = {
+      monogram: 'monogram (harplardan düzülen nyşan)',
+      minimal: 'minimalist we arassa çyzykly',
+      badge: 'badge/greýba görnüşinde',
+      boxed: 'çarçuwa (frame) içinde',
+      line: 'çyzykly we geometrik',
+      neon: 'neon ýagtylyk effektli',
+      gold: 'altyn ýalpyldawuk premium',
+      retro: 'retro / klasik',
+      circle: 'tegelek nyşanly',
+    }
+    const styleHint = styleHints[style] || 'döwrebap'
+
     const logoPrompt =
-      `Kompaniýa ady: "${name}". Ugur: ${industry}. Reňk: ${color}. Stil: ${style}. ` +
-      `"${name}" atly kompaniýa üçin minimal professional logo SVG döret. ` +
-      `Ölçeg viewBox="0 0 400 160". Kompaniýa adyny logo-da takyk ýaz. Logo markasy we tekst bölekleri bolsun.`
+      `Kompaniýa: "${name}". Ugur: ${industry}. Esasy reňk: ${color}. Islenýän stil: ${styleHint}. ` +
+      `"${name}" atly kompaniýa üçin professional brend logo döret, viewBox="0 0 400 160" ölçegli. ` +
+      `Logoda aşakdakylar bolmaly: (a) kompaniýanyň nyşany/markasy — ${styleHint} stilinde, ` +
+      `(b) kompaniýa adynyň doly we takyk ýazgysy, (c) kiçi ugur ýa-da slogan ýazgysy (${industry} bilen bagly). ` +
+      `Logo açyk fonda we karan reňkde gowy görünmeli, size bagly bolmadyk ölçeglere (viewBox) gabat gelýär. ` +
+      `Şrift saýlamasy, agram we harp aralygy bilen oýnam. Hasaplamany ýatda sakla: şrift adyňy Arial, Helvetica, Georgia ýa-da generic serif/sans-serif edip goý.`
 
     const cardPrompt =
-      `Kompaniýa ady: "${name}". Ugur: ${industry}. Reňk: ${color}. Wizitka stili: ${card_style}. ` +
+      `Kompaniýa: "${name}". Ugur: ${industry}. Esasy reňk: ${color}. Wizitka stili: ${card_style}. ` +
       (contact ? `Telefon: ${contact}. ` : '') +
       (email ? `E-poçta: ${email}. ` : '') +
       (ig ? `Instagram: ${ig}. ` : '') +
-      `Professional wizitkanyň ÖŇ tarapyny SVG edip döret, viewBox="0 0 400 240". ` +
-      `Kompaniýa ady, ugry we görnükli konta maglumatlary bolsun. Biziň ýa-da üçünji tarapyň maglumatlaryny goşma.`
+      `Professional wizitkanyň ÖŇ tarapyny döret, viewBox="0 0 400 240" ölçegli. ` +
+      `Wizitkada bolmaly: (a) kompaniýanyň ady doly we aýdyň, (b) ugry ýa-da kiçi slogan, ` +
+      (contact || email || ig
+        ? `(c) konta maglumatlar (diňe ${[contact, email, ig].filter(Boolean).join(', ')} — başga hiç zat goşma). `
+        : '(c) kompaniýanyň nyşany/monogramy. ') +
+      `Stil: döwrebap, ýokary hilli, doly ýerleşdirlen kompozisiýa. ` +
+      `Şrift agramlary, harp aralygy we reňk kontrasty bilen professional görnüş ber. Biziň ýa-da üçünji tarapyň maglumatlaryny goşma.`
 
     const backPrompt =
-      `Kompaniýa ady: "${name}". Reňk: ${color}. Wizitkanyň ARKA tarapyny döret, viewBox="0 0 400 240". ` +
-      `Arka tarapda logo nyşany (monogram), kompaniýa ady we ugry bolsun. Biziň ýa-da üçünji tarapyň maglumatlaryny goşma.`
+      `Kompaniýa: "${name}". Ugur: ${industry}. Esasy reňk: ${color}. ` +
+      `Wizitkanyň ARKA tarapyny döret, viewBox="0 0 400 240" ölçegli. ` +
+      `Arka tarapda: (a) kompaniýanyň monogramy ýa-da nyşany, (b) kompaniýanyň ady, (c) ugry ýa-da slogan. ` +
+      `Dizaýn öňi bilen sazlaşykly, emma arka tarap has ýönekeý we estetiki bolmaly. ` +
+      `Şrift we reňk saýlamasy professional. Biziň ýa-da üçünji tarapyň maglumatlaryny goşma.`
 
     const [logo, cardFront, cardBack] = await Promise.all([
       callLLM(logoPrompt).then(extractSVG),
