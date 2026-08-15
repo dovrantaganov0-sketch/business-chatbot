@@ -45,6 +45,12 @@ INSTAGRAM_VERIFY_TOKEN=<hökmany däl>
 ```
 
 Dizaýn studia AI surat generasiýasy üçin **Cloudflare Workers AI FLUX.1 Schnell**
-(PNG surat döredýär). Açar: Cloudflare Dashboard → My Profile → API Tokens; Account ID
-Dashboard sahypasynda görkezilýär. Açar düzülmedik bolsa dizaýn studia şablon SVG
+(1024x1024 JPEG döredýär). FLUX-a **tekstsiz dekoratiw fon** döredilýär; kompaniýa
+ady, ugry we kontaktlar kod bilen SVG tekst hökmünde takyk goşulýar (hatlar bulaşmasyn
+diýip). Preview-da "NUSGA · PREVIEW" suw alamaty, töleg tassyklanan soň final-da ýok.
+Fon suraty SVG-iň içine base64 hökmünde gökmeýär — aýry
+`/api/design/:id/raw/:kind` endpoint-den URL bilen çagrylýar (brauzer gabatlylygy).
+
+Açar: Cloudflare Dashboard → My Profile → API Tokens; Account ID Dashboard
+sahypasynda görkezilýär. Açar düzülmedik bolsa dizaýn studia şablon SVG
 dizaýnlaryna gaýdýar.
