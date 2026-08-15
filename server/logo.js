@@ -226,7 +226,7 @@ function cardGradient({ name, industry }) {
     `<text x="200" y="78" font-family="Arial, sans-serif" font-weight="900" font-size="30" fill="#fff" text-anchor="middle">${esc(name)}</text>` +
     `<text x="200" y="104" font-family="Arial, sans-serif" font-weight="500" font-size="12" fill="#ffe4f0" letter-spacing="2" text-anchor="middle">${esc(INDUSTRY_LABELS[industry] || industry)}</text>` +
     '<circle cx="200" cy="160" r="22" fill="#ffffff" opacity="0.18"/>' +
-    '<text x="200" y="166" font-family="Arial, sans-serif" font-weight="900" font-size="18" fill="#fff" text-anchor="middle">BI</text>' +
+    `<text x="200" y="166" font-family="Arial, sans-serif" font-weight="900" font-size="18" fill="#fff" text-anchor="middle">${init}</text>` +
     watermark()
   )
 }
