@@ -13,37 +13,48 @@ function isConfigured() {
   return !!(process.env.USER_LLM_API_KEY && process.env.USER_LLM_BASE_URL)
 }
 
-async function callLLM(messages) {
+async function callLLM(messages, attempts = 3) {
   const apiKey = process.env.USER_LLM_API_KEY
   const baseUrl = (process.env.USER_LLM_BASE_URL || 'https://api.deepseek.com/v1').replace(/\/$/, '')
   const model = process.env.USER_LLM_MODEL || 'deepseek-chat'
 
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 15000)
-
-  try {
-    const res = await fetch(`${baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        temperature: 0.6,
-        max_tokens: 500,
-      }),
-      signal: controller.signal,
-    })
-    if (!res.ok) throw new Error(`LLM HTTP ${res.status}`)
-    const data = await res.json()
-    const text = data?.choices?.[0]?.message?.content
-    if (!text) throw new Error('LLM boş jogap')
-    return String(text).trim()
-  } finally {
-    clearTimeout(timer)
+  let lastErr = null
+  for (let i = 0; i < attempts; i++) {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 15000)
+    try {
+      const res = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature: 0.6,
+          max_tokens: 500,
+        }),
+        signal: controller.signal,
+      })
+      if (res.status === 429 || res.status === 503) {
+        lastErr = new Error(`LLM HTTP ${res.status}`)
+        await new Promise((r) => setTimeout(r, 1200 * (i + 1)))
+        continue
+      }
+      if (!res.ok) throw new Error(`LLM HTTP ${res.status}`)
+      const data = await res.json()
+      const text = data?.choices?.[0]?.message?.content
+      if (!text) throw new Error('LLM boş jogap')
+      return String(text).trim()
+    } catch (e) {
+      lastErr = e
+      if (e.name === 'AbortError') await new Promise((r) => setTimeout(r, 800))
+    } finally {
+      clearTimeout(timer)
+    }
   }
+  throw lastErr || new Error('LLM işlemedi')
 }
 
 export async function chatReply(userText = '', history = []) {

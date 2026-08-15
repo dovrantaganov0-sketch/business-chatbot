@@ -48,7 +48,6 @@ export default function DesignStudio({ open, onClose }) {
   useEffect(() => {
     if (!opts) return
     setDesign((d) => ({
-      business_name: d.business_name || '',
       industry: d.industry || opts.industries[0],
       color: d.color || opts.colors[0].name,
       style: d.style || opts.logoStyles[0],
