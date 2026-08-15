@@ -1,5 +1,15 @@
 # BIRDE proýekti — SESSIÝA ÝATLAMASY (2026-08-15 dowam üçin)
 
+## ⏳ ERTIR ETMELI (2026-08-16) — ÝATLATMA
+Ulanyjynyň soňky bellikleri:
+1. **"loga surat çykanok görnenok"** — haýsy logony aýdýar belli DÄL (sorag berdik, jogap berilmedi). Ertir ilki bilen soramaly: sahypanyň ýokarsyndaky BIRDE logomy, "Işlerimiz" suratlarymy, ýa-da "Dizaýn et" penjiresindäki logomy? Şol ýeri düzetmeli.
+2. **"gramatika harp ýalňyşlar bar"** — tapylanlar:
+   - `client/src/components/Work.jsx:7` — "Önüm **tanıdış**" → türkçe **ı** harpy bar, türkmençe **tanadyş** bolmaly.
+   - `client/src/components/Pricing.jsx:8` — "2 düzediş **turý**" — "tur" sözi galdyrylan ýaly, gözden geçirmeli.
+   - `client/src/components/ChatWidget.jsx:7` — "hoş geldiňiz" — dogry, galdyrmaly.
+   - Başga tekstlerde hem türkçe harplar (ı, İ) barlamaly: `grep -rn "ı" client/src`.
+3. ✅ **Sargyt formasy gowy** — ulanyjy tassyklady. Contact.jsx-den dizaýn generasiýa aýryldy (commit 0d033c7), deploy live. Şu ýere degme.
+
 ## Bu sessiýada edildi — Dizaýn Studia (AI Logo + Wizitka)
 - **DesignStudio.jsx** goşuldy: Hero we Navbar-da "Logo + Wizitka dizaýn et" düwmesi → täze modal penjire açylýar.
 - Akym: 1) Kompaniýa ady + ugur + telefon → 2) Logo stili/reňk → 3) Wizitka stili → 4) Generasiýa → 5) Nusgalar (logo, wizitka öňi/arkasy) → 6) Halady → töleg → admin bilen habarlaşma → 7) Admin tassyklasa ýükleme açylýar.
