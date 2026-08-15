@@ -5,7 +5,7 @@ const PLANS = [
     name: 'Logo dizaýny',
     price: 'Şertli',
     unit: '3 wariant',
-    features: ['3 logo warianty', '2 düzediş turý', 'Faýl taýýarlamak', 'Möhlet: 3-5 gün'],
+    features: ['3 logo warianty', '2 düzediş hukugy', 'Faýl taýýarlamak', 'Möhlet: 3-5 gün'],
     popular: true,
   },
   {

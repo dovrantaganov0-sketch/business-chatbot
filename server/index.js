@@ -28,6 +28,7 @@ import {
   designOptions,
   injectWatermark,
   stripWatermark,
+  sanitizeSVG,
 } from './logo.js'
 import { aiGenerateDesign, aiDesignStatus } from './aiDesign.js'
 import { chatReply, chatStatus } from './chat.js'
@@ -202,7 +203,8 @@ function designSVG(order, kind, final = false) {
   const stored = order.design && order.design.svg
   const cfg = designConfig(order)
   if (stored && stored[kind]) {
-    return final ? stripWatermark(stored[kind]) : injectWatermark(stored[kind])
+    const svg = sanitizeSVG(stored[kind])
+    return final ? stripWatermark(svg) : injectWatermark(svg)
   }
   const variant = (order.design && order.design.variant) || 0
   if (kind === 'logo') return generateLogo(cfg, { final, variant })

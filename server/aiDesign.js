@@ -1,4 +1,4 @@
-import { generateLogo, generateCard, generateCardBack, designOptions } from './logo.js'
+import { generateLogo, generateCard, generateCardBack, designOptions, sanitizeSVG } from './logo.js'
 
 function isConfigured() {
   return !!(process.env.USER_LLM_API_KEY && process.env.USER_LLM_BASE_URL)
@@ -28,7 +28,7 @@ async function callLLM(prompt, attempts = 3) {
               content:
                 'Sen AAAA derejeli professional SVG brend dizaýneri we tipografsy. ' +
                 'DIŇE bir sany doly, ulanylmaga taýýar <svg>...</svg> kody gaytar — başga hiç zat (markdown ```, düşündiriş, sözbaşy) ýazma. ' +
-                'Kod sintaktik dogry bolmaly: ähli atrıbutlar doly, tekstler &amp; &lt; &gt; bilen goragly, ýapylan tegler. ' +
+                'Kod sintaktik dogry bolmaly: ähli atributlar doly, tekstler &amp; &lt; &gt; bilen goragly, ýapylan tegler. ' +
                 'Dizaýn prinsipleri: ' +
                 '1) Açyk, deňagramly kompozisiýa — markanyň we tekstiniň arasynda howa (negative space). ' +
                 '2) Professional tipografiýa — şrift ölçegleri, agram (font-weight) we harp aralygy (letter-spacing) çuňňur pikirlen. ' +
@@ -150,9 +150,9 @@ export async function aiGenerateDesign(design = {}) {
       `Şrift we reňk saýlamasy professional. Biziň ýa-da üçünji tarapyň maglumatlaryny goşma.`
 
     const [logo, cardFront, cardBack] = await Promise.all([
-      callLLM(logoPrompt).then(extractSVG),
-      callLLM(cardPrompt).then(extractSVG),
-      callLLM(backPrompt).then(extractSVG),
+      callLLM(logoPrompt).then(extractSVG).then(sanitizeSVG),
+      callLLM(cardPrompt).then(extractSVG).then(sanitizeSVG),
+      callLLM(backPrompt).then(extractSVG).then(sanitizeSVG),
     ])
 
     return { ok: true, ai: true, logo, cardFront, cardBack, base }

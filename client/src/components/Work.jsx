@@ -4,7 +4,7 @@ import { getWorks } from '../api.js'
 const FALLBACK = [
   { type: 'Logo dizaýny', title: 'Kärendes', tag: 'Logo' },
   { type: 'Web sahypa', title: 'Onlaýn dükan', tag: 'Web' },
-  { type: 'Düşündiriş wideo', title: 'Önüm tanıdış', tag: 'Motion' },
+  { type: 'Düşündiriş wideo', title: 'Önüm tanadyş', tag: 'Motion' },
   { type: '3D dizaýn', title: 'Önüm modeli', tag: '3D' },
   { type: 'Wizitka', title: 'Korporatiw stil', tag: 'Dizaýn' },
   { type: 'Logo animasiýasy', title: 'Brend janlanmasy', tag: 'Anim' },

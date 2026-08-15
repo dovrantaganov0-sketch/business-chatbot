@@ -88,7 +88,45 @@ const FONTS = {
 }
 
 function font(name) {
-  return FONTS[name] || FONTS.modern
+  return (FONTS[name] || FONTS.modern).replace(/"/g, '&quot;')
+}
+
+export function sanitizeSVG(svg) {
+  const s = String(svg)
+  let out = ''
+  let inTag = false
+  let inValue = false
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i]
+    if (!inTag) {
+      out += ch
+      if (ch === '<') inTag = true
+      continue
+    }
+    if (inValue) {
+      if (ch === '"') {
+        inValue = false
+        out += '"'
+      } else {
+        out += ch
+      }
+      continue
+    }
+    if (ch === '"') {
+      let j = out.length - 1
+      while (j >= 0 && out[j] === ' ') j--
+      if (out[j] === '=') {
+        inValue = true
+        out += ch
+      } else {
+        out += '&quot;'
+      }
+      continue
+    }
+    out += ch
+    if (ch === '>') inTag = false
+  }
+  return out
 }
 
 const WATERMARK_RE = /<g opacity="0\.45">[\s\S]*?<\/g>/g
