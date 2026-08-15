@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { createOrder, getDesignOptions } from '../api.js'
+import { createOrder } from '../api.js'
 import { PACKAGES, getPackageById, SERVICE_TO_PACKAGE } from '../packages.js'
 
 export default function Contact({ preselectedService }) {
@@ -13,26 +13,6 @@ export default function Contact({ preselectedService }) {
   })
   const [status, setStatus] = useState(null)
   const [sending, setSending] = useState(false)
-  const [design, setDesign] = useState(null)
-  const [designOpts, setDesignOpts] = useState(null)
-  const [orderResult, setOrderResult] = useState(null)
-
-  useEffect(() => {
-    getDesignOptions().then(setDesignOpts).catch(() => {})
-  }, [])
-
-  useEffect(() => {
-    if (designOpts) {
-      setDesign((d) => ({
-        ...(d || {}),
-        business_name: d?.business_name || '',
-        industry: d?.industry || designOpts.industries[0],
-        color: d?.color || designOpts.colors[0].name,
-        style: d?.style || designOpts.logoStyles[0],
-        card_style: d?.card_style || designOpts.cardStyles[0],
-      }))
-    }
-  }, [designOpts])
 
   useEffect(() => {
     if (preselectedService) {
@@ -65,11 +45,9 @@ export default function Contact({ preselectedService }) {
         details: form.details,
         source: 'web',
       }
-      if (design && design.business_name) body.design = design
-      const order = await createOrder(body)
+      await createOrder(body)
       setStatus({ type: 'ok', text: 'Sargydyňyz kabul edildi! Ýakyn wagtda size habarlaşarys. 👍' })
       setForm({ name: '', phone: '', email: '', details: '' })
-      if (body.design) setOrderResult(order)
     } catch (err) {
       setStatus({ type: 'error', text: err.message })
     } finally {
@@ -78,7 +56,6 @@ export default function Contact({ preselectedService }) {
   }
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value })
-  const setD = (k) => (e) => setDesign({ ...design, [k]: e.target.value })
 
   return (
     <section id="kontakt" className="section section-alt">
@@ -167,89 +144,6 @@ export default function Contact({ preselectedService }) {
             })}
           </div>
 
-          {designOpts && !orderResult && (
-            <div className="design-wizard">
-              <div className="design-wizard-head">
-                <span className="design-wizard-ico">🎨</span>
-                <div>
-                  <strong>Logo dizaýn saýlawlary</strong>
-                  <span>Islege görä — logo we wizitka nusgalary taýýarlarys</span>
-                </div>
-              </div>
-              <div className="design-grid">
-                <label className="design-full">
-                  Kompaniýa ady
-                  <input
-                    value={design?.business_name || ''}
-                    onChange={(e) => setDesign({ ...design, business_name: e.target.value })}
-                    placeholder="Meselem: Aşgabat Motors"
-                  />
-                </label>
-                <div className="design-field design-full">
-                  <span className="design-label">Ugur</span>
-                  <div className="chip-row">
-                    {designOpts.industries.map((i) => (
-                      <button
-                        type="button"
-                        key={i}
-                        className={`chip${design?.industry === i ? ' sel' : ''}`}
-                        onClick={() => setD('industry')({ target: { value: i } })}
-                      >
-                        {i}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="design-field design-full">
-                  <span className="design-label">Reňk</span>
-                  <div className="chip-row">
-                    {designOpts.colors.map((c) => (
-                      <button
-                        type="button"
-                        key={c.name}
-                        className={`chip${design?.color === c.name ? ' sel' : ''}`}
-                        onClick={() => setD('color')({ target: { value: c.name } })}
-                      >
-                        <span className="chip-swatch" style={{ background: c.color }}></span>
-                        {c.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="design-field design-full">
-                  <span className="design-label">Logo stili</span>
-                  <div className="chip-row">
-                    {designOpts.logoStyles.map((s) => (
-                      <button
-                        type="button"
-                        key={s}
-                        className={`chip${design?.style === s ? ' sel' : ''}`}
-                        onClick={() => setD('style')({ target: { value: s } })}
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="design-field design-full">
-                  <span className="design-label">Wizitka stili</span>
-                  <div className="chip-row">
-                    {designOpts.cardStyles.map((s) => (
-                      <button
-                        type="button"
-                        key={s}
-                        className={`chip${design?.card_style === s ? ' sel' : ''}`}
-                        onClick={() => setD('card_style')({ target: { value: s } })}
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           <label>
             Adyňyz
             <input value={form.name} onChange={set('name')} placeholder="Adyňyz" />
@@ -277,22 +171,6 @@ export default function Contact({ preselectedService }) {
             />
           </label>
           {status && <div className={`form-status ${status.type}`}>{status.text}</div>}
-          {orderResult && (
-            <div className="design-preview">
-              <h4>Logo nusgalary (suw belgili)</h4>
-              <div className="design-previews">
-                <div>
-                  <img src={`/api/design/${orderResult.id}/logo`} alt="Logo nusgasy" />
-                  <span>Logo</span>
-                </div>
-                <div>
-                  <img src={`/api/design/${orderResult.id}/card`} alt="Wizitka nusgasy" />
-                  <span>Wizitka</span>
-                </div>
-              </div>
-              <p className="design-note">⚠️ Bu diňe nusga (suw alamatly). Doly faýl töleg edilenden soň berilýär.</p>
-            </div>
-          )}
           <button className="btn btn-primary btn-block btn-lg" disabled={sending}>
             {sending ? 'Iberilýär...' : 'Sargydy iber'}
           </button>
