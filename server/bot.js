@@ -58,6 +58,20 @@ const CONTACTS =
   '📧 dovrantaganov0@gmail.com\n\n' +
   'Islendik soragyňyza jogap bermäge taýýar.'
 
+const VALUE_TEXT =
+  'Gowy dizaýn — diňe gözel surat däl, ol iş guraly! 💡\n\n' +
+  'Logo dizaýnynyň peýdasy:\n' +
+  '• Ykrar edilmek — adamyň ýüzü ýaly, logo brendiňizi ilkinji ýüz görnüşinde tanaýar. Göwünlilik we ynam döredýär.\n' +
+  '• Özboluşlylyk — sizi bäsdeşlerden aýyrýar. Adamlar size deňeşdirende "şol, ýörite biz üçin edilen" diýip duýýar.\n' +
+  '• Hemme ýerde işleýär — wizitkada, web sahypada, sosial mediada, wideoda. Bir gezek edilen logo köp ýerde hyzmat edýär.\n' +
+  '• Doly paket — PNG, SVG, reňkli we monohrom wersiýalar. Hüjütde-de, suratda-da, çapda-da ajaýyp görünýär.\n\n' +
+  'Wizitkanyň peýdasy:\n' +
+  '• Abraý — hünärmen görnüşdäki wizitka sizi ygtybarly hünärmen edip görkezýär.\n' +
+  '• Aragatnaşyk — telefon, e-poçta, salgy — bir kartoçkada. Müşderiňiz size ýüz tutmak üçin aňsatlyk tapýar.\n' +
+  '• Ilki täsir — iş ýygnagynda ýa-da duşuşykda wizitka size hünär derejesini berýär.\n' +
+  '• Ýadyňda galmak — logoňyz we reňkleriňiz bilen edilen wizitka sizi ýatda galdyrýar.\n\n' +
+  'Logo + wizitka bilelikde sargyt edeniňizde — tutuş brend paketi. Endirim hem bar! "sargyt" ýazyň.'
+
 const HELP_TEXT =
   'Size kömek etmekden şat! 🎯\n\n' +
   '"BIRDE" sanly hyzmatlar birleşigi Türkmenistanda aşakdakylary hödürleýär:\n' +
@@ -85,6 +99,12 @@ function normalize(text = '') {
 }
 
 const KEYWORDS = [
+  {
+    key: 'peýda',
+    priority: true,
+    words: ['peýda', 'peýdasy', 'näme üçin', 'name ucin', 'näme gerek', 'why', 'зачем', 'польз', 'mysal bilen'],
+    reply: () => VALUE_TEXT,
+  },
   {
     key: 'sargyt',
     words: ['sargyt', 'order', 'заказ', 'zakaz', 'satyn al', 'покуп', 'хочу'],
@@ -362,6 +382,11 @@ export function botReply(text = '') {
   }
 
   if (best) {
+    for (const kw of KEYWORDS) {
+      if (kw.priority && kw.words.some((w) => t.includes(w))) {
+        return { text: kw.reply(), intent: kw.key }
+      }
+    }
     return { text: best.reply(), intent: best.key }
   }
 
