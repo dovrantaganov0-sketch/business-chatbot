@@ -23,3 +23,7 @@ services:
         sync: false
       - key: USER_LLM_MODEL
         sync: false
+      - key: CF_API_TOKEN
+        sync: false
+      - key: CF_ACCOUNT_ID
+        sync: false

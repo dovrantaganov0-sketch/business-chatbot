@@ -1,59 +1,45 @@
-import { generateLogo, generateCard, generateCardBack, designOptions, sanitizeSVG } from './logo.js'
+import { generateLogo, generateCard, generateCardBack, designOptions } from './logo.js'
 
 function isConfigured() {
-  return !!(process.env.USER_LLM_API_KEY && process.env.USER_LLM_BASE_URL)
+  return !!(process.env.CF_API_TOKEN && process.env.CF_ACCOUNT_ID)
 }
 
-async function callLLM(prompt, attempts = 3) {
-  const apiKey = process.env.USER_LLM_API_KEY
-  const baseUrl = (process.env.USER_LLM_BASE_URL || 'https://api.deepseek.com/v1').replace(/\/$/, '')
-  const model = process.env.USER_LLM_MODEL || 'deepseek-chat'
+async function callCF(kind, prompt, attempts = 3) {
+  const token = process.env.CF_API_TOKEN
+  const account = process.env.CF_ACCOUNT_ID
+  const model = process.env.CF_AI_MODEL || '@cf/black-forest-labs/flux-1-schnell'
 
   let lastErr = null
   for (let i = 0; i < attempts; i++) {
     const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 40000)
+    const timer = setTimeout(() => controller.abort(), 90000)
     try {
-      const res = await fetch(`${baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            {
-              role: 'system',
-              content:
-                'Sen AAAA derejeli professional SVG brend dizaýneri we tipografsy. ' +
-                'DIŇE bir sany doly, ulanylmaga taýýar <svg>...</svg> kody gaytar — başga hiç zat (markdown ```, düşündiriş, sözbaşy) ýazma. ' +
-                'Kod sintaktik dogry bolmaly: ähli atributlar doly, tekstler &amp; &lt; &gt; bilen goragly, ýapylan tegler. ' +
-                'Dizaýn prinsipleri: ' +
-                '1) Açyk, deňagramly kompozisiýa — markanyň we tekstiniň arasynda howa (negative space). ' +
-                '2) Professional tipografiýa — şrift ölçegleri, agram (font-weight) we harp aralygy (letter-spacing) çuňňur pikirlen. ' +
-                '3) Reňk — berlen reňk gammasyny we onuň derňewini (light/dark) dogry ulanyň, gradient we şekil bilen çuňluk goşyň. ' +
-                '4) Döwrebap, minimal, ýöne hatyrdan galmajak dizaýn. ' +
-                'Kompaniýa ady we ähli tekstler DIŇE soraýjynyň beren maglumatlary — biziň ýa-da üçünji tarapyň maglumatlaryny goşma. ' +
-                'Teksti doly, takyk, ýalňyşsyz ýaz. Açyk tekst uzyn bolsa iki setir edip dogry ýerleşdir.',
-            },
-            { role: 'user', content: prompt },
-          ],
-          temperature: 0.9,
-          max_tokens: 8192,
-        }),
-        signal: controller.signal,
-      })
+      const res = await fetch(
+        `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(account)}/ai/run/${model}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            prompt,
+            steps: 4,
+          }),
+          signal: controller.signal,
+        }
+      )
       if (res.status === 429 || res.status === 503) {
-        lastErr = new Error(`LLM HTTP ${res.status}`)
+        lastErr = new Error(`Cloudflare HTTP ${res.status}`)
         await new Promise((r) => setTimeout(r, 1500 * (i + 1)))
         continue
       }
-      if (!res.ok) throw new Error(`LLM HTTP ${res.status}`)
+      if (!res.ok) throw new Error(`Cloudflare HTTP ${res.status}`)
       const data = await res.json()
-      const text = data?.choices?.[0]?.message?.content
-      if (!text) throw new Error('LLM boş jogap')
-      return String(text).trim()
+      const b64 = data?.result?.image
+      if (!b64) throw new Error('Cloudflare boş jogap')
+      const raw = String(b64).replace(/^data:image\/(png|jpe?g);base64,/, '')
+      return `data:image/jpeg;base64,${raw}`
     } catch (e) {
       lastErr = e
       if (e.name === 'AbortError') await new Promise((r) => setTimeout(r, 1000))
@@ -61,13 +47,7 @@ async function callLLM(prompt, attempts = 3) {
       clearTimeout(timer)
     }
   }
-  throw lastErr || new Error('LLM işlemedi')
-}
-
-function extractSVG(text = '') {
-  const m = text.match(/<svg[\s\S]*?<\/svg>/i)
-  if (!m) throw new Error('SVG tapylmady')
-  return m[0]
+  throw lastErr || new Error('Cloudflare AI işlemedi')
 }
 
 function safeTitle(s) {
@@ -99,65 +79,80 @@ export async function aiGenerateDesign(design = {}) {
     instagram: ig,
   }
 
-  try {
-    const styleHints = {
-      monogram: 'monogram (harplardan düzülen nyşan)',
-      minimal: 'minimalist we arassa çyzykly',
-      badge: 'badge/greýba görnüşinde',
-      boxed: 'çarçuwa (frame) içinde',
-      line: 'çyzykly we geometrik',
-      neon: 'neon ýagtylyk effektli',
-      gold: 'altyn ýalpyldawuk premium',
-      retro: 'retro / klasik',
-      circle: 'tegelek nyşanly',
+  const styleHints = {
+    monogram: 'elegant abstract geometric emblem motif with overlapping shapes and a luxurious feel',
+    minimal: 'minimalist clean abstract composition with simple lines and lots of negative space',
+    badge: 'badge / crest shaped ornamental frame decoration',
+    boxed: 'geometric frame / box border decoration with balanced symmetry',
+    line: 'thin elegant line art geometric decoration',
+    neon: 'vibrant neon glow light streaks on a dark background',
+    gold: 'premium gold foil elegant flowing metallic ribbon shapes',
+    retro: 'retro vintage ornamental pattern with classic symmetrical art',
+    circle: 'concentric circles and circular geometric patterns',
+  }
+  const styleHint = styleHints[style] || 'modern professional abstract decoration'
+
+  const cardStyleHints = {
+    modern: 'modern clean abstract gradient background with soft shapes',
+    premium: 'premium elegant background with gold accents and silk textures',
+    minimal: 'minimalist soft subtle background with lots of clean space',
+    bold: 'bold vibrant abstract background with energetic color blocks',
+    classic: 'classic timeless elegant background with fine ornamental lines',
+  }
+  const cardStyleHint = cardStyleHints[card_style] || 'professional elegant background'
+
+  const logoPrompt =
+    `Beautiful abstract brand mark / emblem BACKGROUND decoration for a ${industry} company. ` +
+    `Main brand color: ${color}. Style: ${styleHint}. ` +
+    `This is a decorative background only: geometric shapes, gradients, soft shapes, flowing lines. ` +
+    `NO TEXT, NO LETTERS, NO WORDS, NO CHARACTERS, NO LOGOTYPE, NO NUMBERS — strictly no writing anywhere. ` +
+    `Composition leaves clean empty space in the LEFT part and the CENTER-RIGHT, suitable for placing a company name. ` +
+    `High quality, premium, flat vector look, crisp edges, no watermark, no frame around the whole image.`
+
+  const cardPrompt =
+    `Beautiful abstract decorative BACKGROUND for a professional business card FRONT, ${industry} company. ` +
+    `Main brand color: ${color}. Style: ${cardStyleHint}. ` +
+    `This is a decorative background only: gradient, soft shapes, subtle texture. ` +
+    `NO TEXT, NO LETTERS, NO WORDS, NO CHARACTERS, NO NUMBERS, NO CONTACT INFO — strictly no writing anywhere. ` +
+    `The center area should be clean and calm so a company name and contact lines can be placed on top. ` +
+    `Landscape business card proportions, premium look, no watermark, no frame around the whole image.`
+
+  const backPrompt =
+    `Beautiful abstract decorative BACKGROUND for a professional business card BACK, ${industry} company. ` +
+    `Main brand color: ${color}. Style: ${cardStyleHint}. ` +
+    `This is a decorative background only: subtle gradient, elegant geometric motifs, soft glow. ` +
+    `NO TEXT, NO LETTERS, NO WORDS, NO CHARACTERS, NO NUMBERS — strictly no writing anywhere. ` +
+    `The center should be calm and empty so a monogram and name can be placed on top. ` +
+    `Landscape business card proportions, premium look, no watermark, no frame around the whole image.`
+
+  if (!isConfigured()) {
+    return {
+      ok: true,
+      ai: false,
+      logo: generateLogo(base),
+      cardFront: generateCard(base),
+      cardBack: generateCardBack(base),
+      base,
     }
-    const styleHint = styleHints[style] || 'döwrebap'
+  }
 
-    const logoPrompt =
-      `Kompaniýa: "${name}". Ugur: ${industry}. Esasy reňk: ${color}. Islenýän stil: ${styleHint}. ` +
-      `"${name}" atly kompaniýa üçin owadan, zynjyryna ýetýän professional brend logo döret, viewBox="0 0 400 160" ölçegli. ` +
-      `Logoda aşakdakylar bolmaly: ` +
-      `(a) Emblema/nyşan — düşnükli we ýatda galýan, geometrik şekiller, çyzyklar, tegelekler ýa-da gradiýentler bilen gurlan, ${styleHint} stilinde. ` +
-      `(b) Kompaniýa adynyň doly we takyk ýazgysy — owadan şrift, dogry harp aralygy (letter-spacing). ` +
-      `(c) Kiçi ugur ýa-da slogan ýazgysy (${industry} bilen bagly), has kiçi we aşakda. ` +
-      `Wizualla kömek etmek üçin: gradýentler, şeffaflyk (opacity), dekoratiw nokatlar/çyzyklar we arassa negative space ulanyň. ` +
-      `Logo ajaýyp görünmeli: döwrebap, arassa we professional, logo banklarynda bolşy ýaly. ` +
-      `Kompaniýa adyny we ähli tekstleri doly we takyk ýaz. ` +
-      `Şrift adyny Arial, Helvetica, "Trebuchet MS", Georgia ýa-da generic serif/sans-serif edip goý — beýlekileri goşma.`
-
-    const cardPrompt =
-      `Kompaniýa: "${name}". Ugur: ${industry}. Esasy reňk: ${color}. Wizitka stili: ${card_style}. ` +
-      (contact ? `Telefon: ${contact}. ` : '') +
-      (email ? `E-poçta: ${email}. ` : '') +
-      (ig ? `Instagram: ${ig}. ` : '') +
-      `Professional, owadan wizitkanyň ÖŇ tarapyny döret, viewBox="0 0 400 240" ölçegli. ` +
-      `Wizitkada bolmaly: (a) kompaniýanyň ady doly we aýdyň, (b) ugry ýa-da kiçi slogan, ` +
-      (contact || email || ig
-        ? `(c) konta maglumatlar (diňe ${[contact, email, ig].filter(Boolean).join(', ')} — başga hiç zat goşma). `
-        : '(c) kompaniýanyň nyşany/monogramy. ') +
-      `Stil: döwrebap, ýokary hilli, doly ýerleşdirlen kompozisiýa. ` +
-      `Owadan şrift, reňk kontrasty, gradýentler we dekoratiw elementler bilen premium görnüş ber. ` +
-      `Kart 400x240 ölçegden daşary çykmadyk bolsun, tekstler kesilmesin. ` +
-      `Biziň ýa-da üçünji tarapyň maglumatlaryny goşma.`
-
-    const backPrompt =
-      `Kompaniýa: "${name}". Ugur: ${industry}. Esasy reňk: ${color}. ` +
-      `Wizitkanyň ARKA tarapyny döret, viewBox="0 0 400 240" ölçegli. ` +
-      `Arka tarapda: (a) kompaniýanyň monogramy ýa-da nyşany — owadan, dekoratiw we ortada, ` +
-      `(b) kompaniýanyň ady, (c) ugry ýa-da slogan. ` +
-      `Dizaýn öňi bilen sazlaşykly, emma arka tarap has ýönekeý we estetiki bolmaly. ` +
-      `Gradýentler, şeffaflyk we dekoratiw şekiller ulanyň. ` +
-      `Şrift we reňk saýlamasy professional. Biziň ýa-da üçünji tarapyň maglumatlaryny goşma.`
-
-    const [logo, cardFront, cardBack] = await Promise.all([
-      callLLM(logoPrompt).then(extractSVG).then(sanitizeSVG),
-      callLLM(cardPrompt).then(extractSVG).then(sanitizeSVG),
-      callLLM(backPrompt).then(extractSVG).then(sanitizeSVG),
-    ])
-
-    return { ok: true, ai: true, logo, cardFront, cardBack, base }
+  try {
+    const images = {}
+    for (const [kind, prompt] of [
+      ['logo', logoPrompt],
+      ['card', cardPrompt],
+      ['cardBack', backPrompt],
+    ]) {
+      images[kind] = await callCF(kind, prompt)
+    }
+    return {
+      ok: true,
+      ai: true,
+      images: { logo: images.logo, card: images.card, cardBack: images.cardBack },
+      base,
+    }
   } catch (e) {
-    console.error('[aiDesign] AI generasiýa ýalňyşdy:', String(e.message || e))
+    console.error('[aiDesign] Cloudflare AI generasiýa ýalňyşdy:', String(e.message || e))
     return {
       ok: true,
       ai: false,
@@ -171,5 +166,8 @@ export async function aiGenerateDesign(design = {}) {
 }
 
 export function aiDesignStatus() {
-  return { ai: isConfigured(), provider: process.env.USER_LLM_MODEL || null }
+  return {
+    ai: isConfigured(),
+    provider: isConfigured() ? 'Cloudflare AI (FLUX.1 Schnell)' : null,
+  }
 }

@@ -36,11 +36,15 @@ Render Dashboard → Environment (ýa-da render.yaml `sync: false`):
 ```
 ADMIN_TOKEN=<admin paroly>
 DATA_DIR=/data
-USER_LLM_API_KEY=<gemini ýa-da OpenAI-uygunly key>
+USER_LLM_API_KEY=<chat bot üçin gemini ýa-da OpenAI-uygunly key>
 USER_LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
 USER_LLM_MODEL=gemini-flash-latest
+CF_API_TOKEN=<Cloudflare API token — dizaýn studia surat generasiýasy>
+CF_ACCOUNT_ID=<Cloudflare Account ID>
 INSTAGRAM_VERIFY_TOKEN=<hökmany däl>
 ```
 
-Gemini free tier surat generasiýasyny (nanobanana/imagen) açmaýar — şol sebäpli dizaýn
-studia Gemini tekst bilen **SVG generasiýa** edýär; ýalňyş bolsa şablona gaýdýar.
+Dizaýn studia AI surat generasiýasy üçin **Cloudflare Workers AI FLUX.1 Schnell**
+(PNG surat döredýär). Açar: Cloudflare Dashboard → My Profile → API Tokens; Account ID
+Dashboard sahypasynda görkezilýär. Açar düzülmedik bolsa dizaýn studia şablon SVG
+dizaýnlaryna gaýdýar.

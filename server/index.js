@@ -199,18 +199,135 @@ function designConfig(order = {}) {
   }
 }
 
-function designSVG(order, kind, final = false) {
+const PNG_SIZES = {
+  logo: { w: 1024, h: 1024 },
+  card: { w: 1024, h: 1024 },
+  cardBack: { w: 1024, h: 1024 },
+}
+
+function svgEsc(s = '') {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function initials(s = '') {
+  const parts = String(s).trim().split(/\s+/).filter(Boolean)
+  if (!parts.length) return 'BI'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[1][0]).toUpperCase()
+}
+
+function fontStack() {
+  return 'Arial, Helvetica, "Segoe UI", sans-serif'
+}
+
+function overlayRect(w, h, opacity) {
+  return `<rect x="0" y="0" width="${w}" height="${h}" fill="#0b0d12" opacity="${opacity}"/>`
+}
+
+function watermark() {
+  return (
+    '<g opacity="0.55">' +
+    '<text transform="rotate(-18 200 120)" x="200" y="112" font-family="Arial, sans-serif" font-weight="800" font-size="26" fill="#ff5c8a" text-anchor="middle">NUSGA · PREVIEW</text>' +
+    '<text transform="rotate(-18 200 120)" x="200" y="136" font-family="Arial, sans-serif" font-weight="700" font-size="13" fill="#ffffff" text-anchor="middle">TÖLEG SOŇUNDAN DOLY NUSGA</text>' +
+    '</g>'
+  )
+}
+
+function pngBackgroundSVG(imgUrl, kind, cfg, final = false) {
+  const vw = 400
+  const vh = kind === 'logo' ? 160 : 240
+  const name = svgEsc(cfg.name || cfg.business_name || '')
+  const industry = svgEsc(cfg.industry || '')
+  const contactLines = [cfg.phone, cfg.email, cfg.instagram].filter(Boolean)
+  const inner = []
+
+  if (kind === 'logo') {
+    inner.push(overlayRect(vw, vh, 0.38))
+    inner.push(
+      `<text x="200" y="72" font-family="${fontStack()}" font-weight="800" font-size="40" fill="#ffffff" text-anchor="middle" letter-spacing="1">${name}</text>`
+    )
+    inner.push(
+      `<text x="200" y="104" font-family="${fontStack()}" font-weight="600" font-size="14" fill="#e2e8f0" letter-spacing="4" text-anchor="middle">${industry}</text>`
+    )
+  } else if (kind === 'card') {
+    inner.push(overlayRect(vw, vh, 0.45))
+    inner.push(
+      `<text x="200" y="78" font-family="${fontStack()}" font-weight="800" font-size="34" fill="#ffffff" text-anchor="middle" letter-spacing="1">${name}</text>`
+    )
+    inner.push(
+      `<text x="200" y="106" font-family="${fontStack()}" font-weight="600" font-size="13" fill="#e2e8f0" letter-spacing="3" text-anchor="middle">${industry}</text>`
+    )
+    if (contactLines.length) {
+      inner.push(
+        `<text x="200" y="168" font-family="${fontStack()}" font-weight="500" font-size="12" fill="#f8fafc" text-anchor="middle">${svgEsc(contactLines.join('  ·  '))}</text>`
+      )
+    }
+  } else {
+    inner.push(overlayRect(vw, vh, 0.42))
+    inner.push(
+      `<text x="200" y="108" font-family="${fontStack()}" font-weight="900" font-size="46" fill="#ffffff" text-anchor="middle" letter-spacing="2">${svgEsc(initials(name))}</text>`
+    )
+    inner.push(
+      `<text x="200" y="140" font-family="${fontStack()}" font-weight="700" font-size="16" fill="#e2e8f0" letter-spacing="2" text-anchor="middle">${name}</text>`
+    )
+    inner.push(
+      `<text x="200" y="164" font-family="${fontStack()}" font-weight="500" font-size="10" fill="#cbd5e1" letter-spacing="3" text-anchor="middle">${industry}</text>`
+    )
+  }
+
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${vw} ${vh}" width="${vw * 2}" height="${vh * 2}">` +
+    `<image href="${imgUrl}" x="0" y="0" width="${vw}" height="${vh}" preserveAspectRatio="xMidYMid slice"/>` +
+    inner.join('') +
+    (final ? '' : watermark()) +
+    '</svg>'
+  )
+}
+
+function designImage(order, kind) {
+  const images = order.design && order.design.images
+  const raw = images && images[kind]
+  if (!raw) return null
+  const s = String(raw)
+  const mime = /^data:image\/(png|jpe?g);/.test(s) ? s.slice(5, s.indexOf(';')) : 'image/jpeg'
+  const b64 = s.replace(/^data:image\/(png|jpe?g);base64,/, '')
+  return { mime, body: Buffer.from(b64, 'base64') }
+}
+
+function designAsset(order, kind, final = false) {
   const stored = order.design && order.design.svg
+  const images = order.design && order.design.images
   const cfg = designConfig(order)
+
+  if (images && images[kind]) {
+    const imgUrl = `/api/design/${order.id}/raw/${kind}`
+    return { type: 'image/svg+xml', body: pngBackgroundSVG(imgUrl, kind, cfg, final) }
+  }
   if (stored && stored[kind]) {
     const svg = sanitizeSVG(stored[kind])
-    return final ? stripWatermark(svg) : injectWatermark(svg)
+    return { type: 'image/svg+xml', body: final ? stripWatermark(svg) : injectWatermark(svg) }
   }
   const variant = (order.design && order.design.variant) || 0
-  if (kind === 'logo') return generateLogo(cfg, { final, variant })
-  if (kind === 'card') return generateCard(cfg, { final, variant })
-  return generateCardBack(cfg, { final, variant })
+  let body
+  if (kind === 'logo') body = generateLogo(cfg, { final, variant })
+  else if (kind === 'card') body = generateCard(cfg, { final, variant })
+  else body = generateCardBack(cfg, { final, variant })
+  return { type: 'image/svg+xml', body }
 }
+
+app.get('/api/design/:id/raw/:kind', (req, res) => {
+  const order = requireDesignOrder(req, res)
+  if (!order) return
+  const kind = ['logo', 'card', 'cardBack'].includes(req.params.kind) ? req.params.kind : null
+  if (!kind) return res.status(404).json({ error: 'Tapylmady' })
+  const img = designImage(order, kind)
+  if (!img) return res.status(404).json({ error: 'Tapylmady' })
+  res.type(img.mime).send(img.body)
+})
 
 function requireDesignOrder(req, res) {
   const order = getOrder(req.params.id)
@@ -230,7 +347,8 @@ app.get('/api/design/:id/logo', (req, res) => {
   if (final && !DESIGN_STATUS_OK.includes(order.status)) {
     return res.status(403).json({ error: 'Töleg tassyklanandan soň açylýar' })
   }
-  res.type('image/svg+xml').send(designSVG(order, 'logo', final))
+  const asset = designAsset(order, 'logo', final)
+  res.type(asset.type).send(asset.body)
 })
 
 app.get('/api/design/:id/card', (req, res) => {
@@ -240,7 +358,8 @@ app.get('/api/design/:id/card', (req, res) => {
   if (final && !DESIGN_STATUS_OK.includes(order.status)) {
     return res.status(403).json({ error: 'Töleg tassyklanandan soň açylýar' })
   }
-  res.type('image/svg+xml').send(designSVG(order, 'card', final))
+  const asset = designAsset(order, 'card', final)
+  res.type(asset.type).send(asset.body)
 })
 
 app.get('/api/design/:id/card-back', (req, res) => {
@@ -250,7 +369,8 @@ app.get('/api/design/:id/card-back', (req, res) => {
   if (final && !DESIGN_STATUS_OK.includes(order.status)) {
     return res.status(403).json({ error: 'Töleg tassyklanandan soň açylýar' })
   }
-  res.type('image/svg+xml').send(designSVG(order, 'cardBack', final))
+  const asset = designAsset(order, 'cardBack', final)
+  res.type(asset.type).send(asset.body)
 })
 
 app.post('/api/design/generate', async (req, res) => {
@@ -277,10 +397,10 @@ app.post('/api/design/generate', async (req, res) => {
 
   const generated = await aiGenerateDesign(design)
   if (generated.ai) {
-    design.svg = {
-      logo: generated.logo,
-      card: generated.cardFront,
-      cardBack: generated.cardBack,
+    design.images = {
+      logo: generated.images.logo,
+      card: generated.images.card,
+      cardBack: generated.images.cardBack,
     }
     design.ai = true
   }
@@ -334,12 +454,13 @@ app.post('/api/design/:id/regenerate', async (req, res) => {
     ai: false,
   }
   delete design.svg
+  delete design.images
   const generated = await aiGenerateDesign(design)
   if (generated.ai) {
-    design.svg = {
-      logo: generated.logo,
-      card: generated.cardFront,
-      cardBack: generated.cardBack,
+    design.images = {
+      logo: generated.images.logo,
+      card: generated.images.card,
+      cardBack: generated.images.cardBack,
     }
     design.ai = true
   }
