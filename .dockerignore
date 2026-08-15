@@ -1,0 +1,9 @@
+.git
+.gitignore
+node_modules
+**/node_modules
+server/data
+birde-proyekt-240814.tar.gz
+*.log
+.env
+.env.*

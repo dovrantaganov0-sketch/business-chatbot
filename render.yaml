@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: birde
+    runtime: node
+    plan: free
+    buildCommand: npm run install:all && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    disk:
+      name: birde-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DATA_DIR
+        value: /data
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: INSTAGRAM_VERIFY_TOKEN
+        sync: false
+      - key: USER_LLM_API_KEY
+        sync: false
+      - key: USER_LLM_BASE_URL
+        sync: false
+      - key: USER_LLM_MODEL
+        sync: false

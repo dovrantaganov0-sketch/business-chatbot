@@ -1,0 +1,14 @@
+{
+  "name": "birde-digital-services",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BIRDE - Sanly hyzmatlar birleşigi. Web sahypa, bot we sargyt dolandyryş",
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "build": "npm --prefix client run build",
+    "dev": "node scripts/dev.js",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "start": "npm --prefix server start"
+  }
+}
