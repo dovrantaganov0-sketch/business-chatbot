@@ -10,6 +10,15 @@
 - **Admin**: `paid` status ("Töleg tassyklandy") goşuldy — download muny açýar.
 - Test: generate/regenerate/limit/status/download — ählisi işledi.
 
+## Render deploy (2026-08-15) — TAMAMLANDY
+- Render service: `srv-d9vhvpjl550s738luf50`, URL https://business-chatbot-gdvq.onrender.com
+- Config PATCH (format `serviceDetails.envSpecificDetails`): `buildCommand="npm run install:all && npm run build"`, `startCommand="npm start"`, `healthCheckPath="/api/health"` — 200 OK
+- Env-vars PUT `/env-vars` bilen goşuldy: ADMIN_TOKEN, DATA_DIR=./server/data, USER_LLM_* (Gemini) — 200 OK
+- Deploy: `POST /services/{id}/deploys` → dep-da0579gu01pc738e6ijg, 38 sekundda **live**
+- Onlaýn barlag: /api/health OK, /api/design/options 200, ai-status `{ai:true, provider:gemini-flash-latest}`, generate/regenerate/status/download/previews (final, suw belgisiz) ählisi işleýär, admin verify OK
+- Onlaýn generate/regenerate `ai:false` (Gemini 429 free tier limit) → fallback şablon işleýär, UI bozulmaýar
+- **Test order**: produksiýada id=1 "Online Test" (paid statusda) galdy — admin panelde görünýär, isleseň admin panelden pozmaly
+
 ## Gemini barlagy (ulanyjy beren key)
 - Key: `AQ.Ab8RN...` (Google AI Studio, free tier) — OpenAI-uygunly endpoint-de **işledi** (tekst).
 - Surat modelleri (gemini-2.5-flash-image, nano-banana, imagen-4.0) free tier-de **quota 0** — surat generasiýasy ýok.

@@ -77,7 +77,9 @@ export async function aiGenerateDesign(design = {}) {
   const color = design.color || opts.colors[0].name
   const style = design.style || opts.logoStyles[0]
   const card_style = design.card_style || opts.cardStyles[0]
-  const contact = `+993 62 017 373`, email = 'dovrantaganov0@gmail.com', ig = '@birde.design'
+  const contact = design.phone || ''
+  const email = design.email || ''
+  const ig = design.instagram || ''
 
   const base = {
     business_name: design.business_name || design.name || '',
@@ -85,8 +87,8 @@ export async function aiGenerateDesign(design = {}) {
     color,
     style,
     card_style,
-    phone: design.phone || contact,
-    email: design.email || email,
+    phone: contact,
+    email,
     instagram: ig,
   }
 
@@ -98,13 +100,15 @@ export async function aiGenerateDesign(design = {}) {
 
     const cardPrompt =
       `Kompaniýa ady: "${name}". Ugur: ${industry}. Reňk: ${color}. Wizitka stili: ${card_style}. ` +
-      `Telefon: ${contact}, E-poçta: ${email}, Instagram: ${ig}. ` +
+      (contact ? `Telefon: ${contact}. ` : '') +
+      (email ? `E-poçta: ${email}. ` : '') +
+      (ig ? `Instagram: ${ig}. ` : '') +
       `Professional wizitkanyň ÖŇ tarapyny SVG edip döret, viewBox="0 0 400 240". ` +
-      `Kompaniýa ady, ugry, telefon, email we instagram adresleri görnükli bolsun.`
+      `Kompaniýa ady, ugry we görnükli konta maglumatlary bolsun. Biziň ýa-da üçünji tarapyň maglumatlaryny goşma.`
 
     const backPrompt =
       `Kompaniýa ady: "${name}". Reňk: ${color}. Wizitkanyň ARKA tarapyny döret, viewBox="0 0 400 240". ` +
-      `Arka tarapda logo nyşany (monogram), kompaniýa ady we yzky maglumat: @birde.design beýleki hyzmatlar.`
+      `Arka tarapda logo nyşany (monogram), kompaniýa ady we ugry bolsun. Biziň ýa-da üçünji tarapyň maglumatlaryny goşma.`
 
     const [logo, cardFront, cardBack] = await Promise.all([
       callLLM(logoPrompt).then(extractSVG),

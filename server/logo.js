@@ -185,10 +185,15 @@ const LOGO_STYLES = {
   circle: logoCircle,
 }
 
-function cardDark({ name, industry, color }) {
+function cardDark({ name, industry, color, phone = '', email = '', instagram = '' }) {
   const c = COLORS[color] || COLORS.Fiolet
   const init = esc(initials(name))
   const ind = esc(INDUSTRY_LABELS[industry] || industry)
+  const contactLines = [
+    phone && `<text x="34" y="150" font-family="Arial, sans-serif" font-size="13" fill="#9aa5bb">${esc(phone)}</text>`,
+    email && `<text x="34" y="172" font-family="Arial, sans-serif" font-size="13" fill="#9aa5bb">${esc(email)}</text>`,
+    instagram && `<text x="34" y="194" font-family="Arial, sans-serif" font-size="13" fill="#9aa5bb">${esc(instagram)}</text>`,
+  ].filter(Boolean).join('')
   return (
     '<rect x="20" y="20" width="360" height="200" rx="16" fill="#0b0d12"/>' +
     `<rect x="34" y="34" width="58" height="58" rx="14" fill="url(#g)"/>` +
@@ -196,9 +201,7 @@ function cardDark({ name, industry, color }) {
     `<text x="106" y="60" font-family="Arial, sans-serif" font-weight="800" font-size="22" fill="#fff">${esc(name)}</text>` +
     `<text x="106" y="82" font-family="Arial, sans-serif" font-weight="500" font-size="11" fill="#9aa5bb" letter-spacing="1.5">${ind}</text>` +
     '<line x1="34" y1="112" x2="366" y2="112" stroke="#262e40" stroke-width="2"/>' +
-    '<text x="34" y="150" font-family="Arial, sans-serif" font-size="13" fill="#9aa5bb">+993 62 017 373</text>' +
-    '<text x="34" y="172" font-family="Arial, sans-serif" font-size="13" fill="#9aa5bb">dovrantaganov0@gmail.com</text>' +
-    '<text x="34" y="194" font-family="Arial, sans-serif" font-size="13" fill="#9aa5bb">@birde.design</text>' +
+    contactLines +
     `<circle cx="350" cy="196" r="12" fill="${c.main}"/>` +
     watermark()
   )
@@ -228,16 +231,20 @@ function cardLight({ name, industry }) {
   )
 }
 
-function cardSplit({ name, industry, color }) {
+function cardSplit({ name, industry, color, phone = '', email = '', instagram = '' }) {
   const c = COLORS[color] || COLORS.Fiolet
   const init = esc(initials(name))
+  const contactLines = [
+    phone && `<text x="190" y="150" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">${esc(phone)}</text>`,
+    email && `<text x="190" y="170" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">${esc(email)}</text>`,
+    instagram && `<text x="190" y="190" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">${esc(instagram)}</text>`,
+  ].filter(Boolean).join('')
   return (
     '<rect x="20" y="20" width="150" height="200" rx="16" fill="url(#g)"/>' +
     `<text x="95" y="100" font-family="Arial, sans-serif" font-weight="900" font-size="34" fill="#fff" text-anchor="middle">${init}</text>` +
     `<text x="190" y="78" font-family="Arial, sans-serif" font-weight="800" font-size="22" fill="#0b0d12">${esc(name)}</text>` +
     `<text x="190" y="100" font-family="Arial, sans-serif" font-weight="500" font-size="11" fill="#8a93a8" letter-spacing="1.5">${esc(INDUSTRY_LABELS[industry] || industry)}</text>` +
-    '<text x="190" y="150" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">+993 62 017 373</text>' +
-    '<text x="190" y="170" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">dovrantaganov0@gmail.com</text>' +
+    contactLines +
     watermark()
   )
 }
@@ -327,7 +334,7 @@ export function generateCard(order = {}, opts = {}) {
   return svg
 }
 
-function cardBack({ name, industry, color, card_style, variant = 0 }) {
+function cardBack({ name, industry, color, card_style, variant = 0, phone = '', email = '', instagram = '' }) {
   const c = COLORS[color] || COLORS.Fiolet
   const init = esc(initials(name))
   const light = ['light', 'minimal', 'frame'].includes(card_style)
@@ -338,6 +345,7 @@ function cardBack({ name, industry, color, card_style, variant = 0 }) {
   const mark =
     `<rect x="${center - 30}" y="70" width="60" height="60" rx="15" fill="url(#g)"/>` +
     `<text x="${center}" y="106" font-family="Arial, sans-serif" font-weight="900" font-size="26" fill="#ffffff" text-anchor="middle">${init}</text>`
+  const tagline = [instagram, phone, email].filter(Boolean).join(' · ')
   return (
     `<rect x="20" y="20" width="360" height="200" rx="16" fill="${bg}"/>` +
     (light
@@ -346,7 +354,7 @@ function cardBack({ name, industry, color, card_style, variant = 0 }) {
     mark +
     `<text x="${center}" y="158" font-family="Arial, sans-serif" font-weight="800" font-size="17" fill="${fg}" text-anchor="middle">${esc(name)}</text>` +
     `<text x="${center}" y="180" font-family="Arial, sans-serif" font-weight="500" font-size="10" fill="${sub}" letter-spacing="2" text-anchor="middle">${esc(INDUSTRY_LABELS[industry] || 'SANLY HYZMATLAR')}</text>` +
-    `<text x="${center}" y="204" font-family="Arial, sans-serif" font-weight="500" font-size="9" fill="${sub}" text-anchor="middle">@birde.design · +993 62 017 373</text>` +
+    (tagline ? `<text x="${center}" y="204" font-family="Arial, sans-serif" font-weight="500" font-size="9" fill="${sub}" text-anchor="middle">${esc(tagline)}</text>` : '') +
     watermark()
   )
 }

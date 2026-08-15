@@ -187,12 +187,14 @@ app.get('/api/design/ai-status', (req, res) => {
 
 function designConfig(order = {}) {
   const d = order.design || {}
+  const base = d.base || {}
   return {
     ...order,
     ...d,
+    ...base,
     name: d.business_name || order.name || '',
-    phone: d.phone || order.phone || '',
-    email: d.email || order.email || '',
+    phone: base.phone || d.phone || order.phone || '',
+    email: base.email || d.email || order.email || '',
   }
 }
 
