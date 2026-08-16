@@ -55,7 +55,7 @@ const IMAGE_SIZES = {
 }
 
 async function callCF(kind, prompt, attempts = 3) {
-  const model = process.env.CF_AI_MODEL || '@cf/black-forest-labs/flux-2-klein-4b'
+  const model = process.env.CF_AI_MODEL || '@cf/leonardo/lucid-origin'
   const creds = listCredentials()
   let lastErr = null
 
@@ -67,16 +67,21 @@ async function callCF(kind, prompt, attempts = 3) {
       const timer = setTimeout(() => controller.abort(), 90000)
       try {
         const size = IMAGE_SIZES[kind] || IMAGE_SIZES.logo
-        const form = new FormData()
-        form.append('prompt', prompt)
-        form.append('width', String(size.width))
-        form.append('height', String(size.height))
         const res = await fetch(
           `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(account)}/ai/run/${model}`,
           {
             method: 'POST',
-            headers: { Authorization: `Bearer ${token}` },
-            body: form,
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              prompt,
+              width: size.width,
+              height: size.height,
+              guidance: 4.5,
+              num_steps: 20,
+            }),
             signal: controller.signal,
           }
         )
@@ -241,7 +246,7 @@ export function aiDesignStatus() {
   return {
     ai: creds.length > 0,
     provider: creds.length
-      ? `Cloudflare AI (${process.env.CF_AI_MODEL || '@cf/black-forest-labs/flux-2-klein-4b'}) [${creds.length} açar]`
+      ? `Cloudflare AI (${process.env.CF_AI_MODEL || '@cf/leonardo/lucid-origin'}) [${creds.length} açar]`
       : null,
   }
 }
