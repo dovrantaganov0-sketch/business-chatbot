@@ -121,6 +121,30 @@ function safeTitle(s) {
     .slice(0, 60) || 'logo'
 }
 
+function toEnglish(s = '') {
+  const map = {
+    ä: 'a', á: 'a', â: 'a', ã: 'a', à: 'a', å: 'a',
+    ç: 'ch', č: 'ch',
+    ğ: 'g',
+    ý: 'y',
+    ň: 'n', ñ: 'n', ń: 'n',
+    ö: 'o', ô: 'o', õ: 'o', ó: 'o', ò: 'o',
+    ş: 'sh', š: 'sh',
+    ü: 'u', û: 'u', ú: 'u', ù: 'u', ū: 'u',
+    ž: 'zh', ź: 'z', ż: 'z',
+    í: 'i', î: 'i', ï: 'i', ı: 'i',
+    é: 'e', ê: 'e', ë: 'e',
+  }
+  return String(s)
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x00-\x7F]/g, (ch) => map[ch.toLowerCase()] || '')
+    .replace(/[^a-zA-Z0-9 .'-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 60)
+}
+
 export async function aiGenerateDesign(design = {}) {
   const opts = designOptions()
   const name = safeTitle(design.business_name || design.name || '')
@@ -142,6 +166,16 @@ export async function aiGenerateDesign(design = {}) {
     email,
     instagram: ig,
   }
+
+  const brandName = toEnglish(base.business_name) || 'Company'
+  const initials =
+    brandName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0].toUpperCase())
+      .join('') || brandName.slice(0, 2).toUpperCase()
+  const contactDigits = String(contact).replace(/[^+0-9 ]/g, '').trim()
 
   const styleHints = {
     monogram: 'elegant abstract geometric emblem motif with overlapping shapes and a luxurious feel',
@@ -166,32 +200,33 @@ export async function aiGenerateDesign(design = {}) {
   const cardStyleHint = cardStyleHints[card_style] || 'professional elegant background'
 
   const logoPrompt =
-    `Beautiful abstract brand mark / emblem BACKGROUND decoration for a ${industry} company. ` +
+    `A complete LOGO design for "${brandName}", a ${industry} company. ` +
     `Main brand color: ${color}. Style: ${styleHint}. ` +
-    `This is a decorative background only: geometric shapes, gradients, soft shapes, flowing lines. ` +
-    `NO TEXT, NO LETTERS, NO WORDS, NO CHARACTERS, NO LOGOTYPE, NO NUMBERS — strictly no writing anywhere. ` +
-    `Composition leaves clean empty space in the LEFT part and the CENTER-RIGHT, suitable for placing a company name. ` +
-    `High quality, premium, flat vector look, crisp edges, no watermark, no frame around the whole image.`
+    `The company name "${brandName}" is written in CLEAR, CORRECT English text inside the image, ` +
+    `elegant typography, placed in the lower-center of the logo. ` +
+    `Above it an abstract geometric emblem / icon decoration in the same brand color. ` +
+    `A complete finished logo, not a placeholder, no gibberish characters, no watermark, ` +
+    `no frame around the whole image. Premium flat vector look, crisp edges.`
 
   const cardPrompt =
-    `Beautiful abstract decorative BACKGROUND for a professional business card FRONT, ${industry} company. ` +
+    `A complete FRONT side of a professional business card for "${brandName}", a ${industry} company. ` +
     `Main brand color: ${color}. Style: ${cardStyleHint}. ` +
-    `WIDE HORIZONTAL BAND composition: all decoration is concentrated in the CENTER horizontal strip, ` +
-    `top and bottom edges stay calm and empty (they will be cropped). ` +
-    `This is a decorative background only: gradient, soft shapes, subtle texture. ` +
-    `NO TEXT, NO LETTERS, NO WORDS, NO CHARACTERS, NO NUMBERS, NO CONTACT INFO — strictly no writing anywhere, a plain abstract background. ` +
-    `The center-left area should be clean and calm so a company name and contact lines can be placed on top. ` +
-    `Premium look, no watermark, no frame around the whole image.`
+    `The company name "${brandName}" is written in CLEAR, CORRECT English text, ` +
+    `horizontally centered in the exact middle of the image, elegant typography. ` +
+    (contactDigits
+      ? `Below the name write the phone number ${contactDigits} in clear readable digits. `
+      : '') +
+    `Everything is positioned in the CENTER horizontal band of the image. ` +
+    `A complete finished business card design, not a background only. ` +
+    `No gibberish characters, no watermark, no frame around the whole image. Premium look.`
 
   const backPrompt =
-    `Beautiful abstract decorative BACKGROUND for a professional business card BACK, ${industry} company. ` +
+    `A complete BACK side of the same professional business card for "${brandName}", a ${industry} company. ` +
     `Main brand color: ${color}. Style: ${cardStyleHint}. ` +
-    `WIDE HORIZONTAL BAND composition: all decoration is concentrated in the CENTER horizontal strip, ` +
-    `top and bottom edges stay calm and empty (they will be cropped). ` +
-    `This is a decorative background only: subtle gradient, elegant geometric motifs, soft glow. ` +
-    `NO TEXT, NO LETTERS, NO WORDS, NO CHARACTERS, NO NUMBERS — strictly no writing anywhere, a plain abstract background. ` +
-    `The center should be calm and empty so a monogram and name can be placed on top. ` +
-    `Premium look, no watermark, no frame around the whole image.`
+    `A centered elegant monogram with the initials "${initials}" and the company name "${brandName}" ` +
+    `in CLEAR, CORRECT English text in the exact center of the image. ` +
+    `Everything is positioned in the CENTER horizontal band of the image. ` +
+    `A complete finished business card design. No gibberish characters, no watermark, no frame. Premium look.`
 
   if (!isConfigured()) {
     return {
