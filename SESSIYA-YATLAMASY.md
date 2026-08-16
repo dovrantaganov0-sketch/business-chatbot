@@ -1,5 +1,16 @@
 # BIRDE proýekti — SESSIÝA ÝATLAMASY (2026-08-15 dowam üçin)
 
+## ✅ NVIDIA fallback — deploy live (2026-08-16, main commit 5534e80)
+- **Ýagdaý**: deploy `dep-da109vu7bikc7383tscg` **live**, onlaýn test geçdi: CF kwota gutaran (5 hasap hem 4006) → **NVIDIA nemotron-super-49b SVG** döretdi (`ai:true`, Gozel logo: "Gozel" + "Beauty Salon", watermark bar, 3 SVG valid XML).
+- **Kod üýtgeşmesi** (`feature/nvidia-fallback` → main merge):
+  - `server/aiDesign.js`: CF (`callCF`, lucid-origin surat) ilki, kwota/ýalňyşlyk bolsa NVIDIA `callLLM` → `extractSVG` → `sanitizeSVG` (SVG fallback). `NV_API_KEY` + `NV_API_KEY_1..10` rotasiýa (`listNVCreds`, `PENDING` aýlanýar), kwota error (402/429 quota) → `markQuotaExhausted('nv:'+token)` UTC gije ýaryna.
+  - `server/index.js`: generate/regenerate `generated.images` (CF) ýa-da `generated.logo/cardFront/cardBack` (NVIDIA → `design.svg`) — ikisini hem goldaýar.
+  - `.env.example`: NVIDIA bölümi goşuldy.
+- **Render env** (goşuldy): `NV_API_KEY` (işleýän), `NV_API_KEY_2..5` = `PENDING` (slotlar, ulanyjy 4 keyi alanda doldurar), `NV_LLM_MODEL=nvidia/llama-3.3-nemotron-super-49b-v1`, `NV_API_BASE_URL=https://integrate.api.nvidia.com/v1`.
+- **GitHub token täze**: ulanyjy beren (push-a gerek, ghp_ bilen başlaýar) — köne token 401 berýärdi. (Şu faýla token ýazma, GitHub push protection bloklaýar.)
+- **Ähmiýetli**: NVIDIA key 1000 credit (~100-150 dizaýn). 5 key = ~500-750 dizaýn. CF ertir UTC gije ýaryndan täzelenýär.
+- **MÖHÜM**: `feature/templates` branch (şablon galereýasy + admin SVG şablon goşmak) hälä main-e merge DÄL — main-däki AI (CF/NVIDIA) bilen gapma-garşylykly (aiDesign/index kodu), ulanyjy hälä karar bermedi.
+
 ## ⏳ ERTIR ETMELI (2026-08-16) — ÝATLATMA
 Ulanyjynyň soňky bellikleri:
 1. **"loga surat çykanok görnenok"** — haýsy logony aýdýar belli DÄL (sorag berdik, jogap berilmedi). Ertir ilki bilen soramaly: sahypanyň ýokarsyndaky BIRDE logomy, "Işlerimiz" suratlarymy, ýa-da "Dizaýn et" penjiresindäki logomy? Şol ýeri düzetmeli.
