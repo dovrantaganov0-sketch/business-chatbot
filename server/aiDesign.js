@@ -68,7 +68,8 @@ function isConfigured() {
 function listNVCreds() {
   const keys = []
   const push = (k) => {
-    if (k) keys.push(String(k))
+    const s = String(k || '')
+    if (s && s.length >= 8 && !/^PENDING/i.test(s)) keys.push(s)
   }
   push(process.env.NV_API_KEY)
   for (let i = 1; i <= 10; i++) {
