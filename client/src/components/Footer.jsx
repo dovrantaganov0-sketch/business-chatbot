@@ -20,7 +20,8 @@ export default function Footer() {
         </div>
       </div>
       <div className="footer-bottom">
-        © {new Date().getFullYear()} BIRDE. Ähli hukuklar goralan.
+        © {new Date().getFullYear()} BIRDE. Ähli hukuklar goralan. ·{' '}
+        <a href="#/admin" className="admin-link">Admin</a>
       </div>
     </footer>
   )

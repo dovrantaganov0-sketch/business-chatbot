@@ -78,5 +78,7 @@ export const uploadImage = async (file) => {
   })
 }
 
-export const verifyAdmin = (token) =>
-  request('/admin/verify', { headers: { 'x-admin-token': token } })
+export const verifyAdmin = async (token) => {
+  const data = await request('/admin/verify', { headers: { 'x-admin-token': token } })
+  return !!(data && data.ok)
+}

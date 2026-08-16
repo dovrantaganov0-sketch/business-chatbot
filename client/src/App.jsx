@@ -31,17 +31,30 @@ export default function App() {
   }
 
   useEffect(() => {
+    const isAdminRoute = () => {
+      const h = window.location.hash.replace('#/', '').trim()
+      if (h === 'admin') return true
+      return window.location.pathname.replace(/\/+$/, '') === '/admin'
+    }
     const onHash = () => {
-      const h = window.location.hash.replace('#/', '')
-      setRoute(h === 'admin' ? 'admin' : 'home')
-      if (h !== 'admin') window.scrollTo({ top: 0, behavior: 'smooth' })
+      const admin = isAdminRoute()
+      setRoute(admin ? 'admin' : 'home')
+      if (!admin) window.scrollTo({ top: 0, behavior: 'smooth' })
     }
     onHash()
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
-  if (route === 'admin') return <Admin onBack={() => (window.location.hash = '/')} />
+  if (route === 'admin') {
+    return (
+      <Admin
+        onBack={() => {
+          window.location.href = '/#/'
+        }}
+      />
+    )
+  }
 
   return (
     <div className="app">
