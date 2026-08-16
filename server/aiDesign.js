@@ -48,8 +48,14 @@ function isQuotaExhausted(account) {
   return !!until && Date.now() < until
 }
 
+const IMAGE_SIZES = {
+  logo: { width: 1024, height: 1024 },
+  card: { width: 1024, height: 640 },
+  cardBack: { width: 1024, height: 640 },
+}
+
 async function callCF(kind, prompt, attempts = 3) {
-  const model = process.env.CF_AI_MODEL || '@cf/black-forest-labs/flux-1-schnell'
+  const model = process.env.CF_AI_MODEL || '@cf/black-forest-labs/flux-2-klein-4b'
   const creds = listCredentials()
   let lastErr = null
 
@@ -60,18 +66,17 @@ async function callCF(kind, prompt, attempts = 3) {
       const controller = new AbortController()
       const timer = setTimeout(() => controller.abort(), 90000)
       try {
+        const size = IMAGE_SIZES[kind] || IMAGE_SIZES.logo
+        const form = new FormData()
+        form.append('prompt', prompt)
+        form.append('width', String(size.width))
+        form.append('height', String(size.height))
         const res = await fetch(
           `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(account)}/ai/run/${model}`,
           {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              prompt,
-              steps: 4,
-            }),
+            headers: { Authorization: `Bearer ${token}` },
+            body: form,
             signal: controller.signal,
           }
         )
@@ -99,7 +104,7 @@ async function callCF(kind, prompt, attempts = 3) {
           )
         }
         const data = await res.json()
-        const b64 = data?.result?.image
+        const b64 = data?.result?.image || data?.image
         if (!b64) throw new Error('Cloudflare boş jogap')
         const raw = String(b64).replace(/^data:image\/(png|jpe?g);base64,/, '')
         return `data:image/jpeg;base64,${raw}`
@@ -201,7 +206,7 @@ export async function aiGenerateDesign(design = {}) {
 
   const logoPrompt =
     `A complete LOGO design for "${brandName}", a ${industry} company. ` +
-    `Main brand color: ${color}. Style: ${styleHint}. ` +
+    `The image is SQUARE 1024x1024. Main brand color: ${color}. Style: ${styleHint}. ` +
     `The company name "${brandName}" is written in CLEAR, CORRECT English text inside the image, ` +
     `elegant typography, placed in the lower-center of the logo. ` +
     `Above it an abstract geometric emblem / icon decoration in the same brand color. ` +
@@ -210,22 +215,22 @@ export async function aiGenerateDesign(design = {}) {
 
   const cardPrompt =
     `A complete FRONT side of a professional business card for "${brandName}", a ${industry} company. ` +
+    `The image is WIDE LANDSCAPE 16:10 (1024x640), exactly like a real business card. ` +
     `Main brand color: ${color}. Style: ${cardStyleHint}. ` +
     `The company name "${brandName}" is written in CLEAR, CORRECT English text, ` +
-    `horizontally centered in the exact middle of the image, elegant typography. ` +
+    `horizontally centered in the upper-middle of the image, elegant typography. ` +
     (contactDigits
       ? `Below the name write the phone number ${contactDigits} in clear readable digits. `
       : '') +
-    `Everything is positioned in the CENTER horizontal band of the image. ` +
     `A complete finished business card design, not a background only. ` +
     `No gibberish characters, no watermark, no frame around the whole image. Premium look.`
 
   const backPrompt =
     `A complete BACK side of the same professional business card for "${brandName}", a ${industry} company. ` +
+    `The image is WIDE LANDSCAPE 16:10 (1024x640), exactly like a real business card. ` +
     `Main brand color: ${color}. Style: ${cardStyleHint}. ` +
     `A centered elegant monogram with the initials "${initials}" and the company name "${brandName}" ` +
-    `in CLEAR, CORRECT English text in the exact center of the image. ` +
-    `Everything is positioned in the CENTER horizontal band of the image. ` +
+    `in CLEAR, CORRECT English text in the center of the image. ` +
     `A complete finished business card design. No gibberish characters, no watermark, no frame. Premium look.`
 
   if (!isConfigured()) {
@@ -272,6 +277,8 @@ export function aiDesignStatus() {
   const creds = listCredentials()
   return {
     ai: creds.length > 0,
-    provider: creds.length ? `Cloudflare AI (FLUX.1 Schnell) [${creds.length} açar]` : null,
+    provider: creds.length
+      ? `Cloudflare AI (${process.env.CF_AI_MODEL || '@cf/black-forest-labs/flux-2-klein-4b'}) [${creds.length} açar]`
+      : null,
   }
 }
