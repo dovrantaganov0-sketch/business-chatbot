@@ -1,5 +1,51 @@
 import { generateLogo, generateCard, generateCardBack, designOptions } from './logo.js'
 
+const TR_MAP = { ä: 'a', ç: 'ch', ň: 'n', ö: 'o', ş: 'sh', ü: 'u', ý: 'y', ž: 'zh' }
+function toLatin(s = '') {
+  return String(s).replace(/[äçňöşüýžÄÇŇÖŞÜÝŽ]/g, (ch) => TR_MAP[ch.toLowerCase()] || ch)
+}
+
+const INDUSTRY_EN = {
+  Telekeçilik: 'Business Consulting',
+  Senagat: 'Manufacturing Industry',
+  Logistika: 'Logistics & Delivery',
+  Saglyk: 'Healthcare',
+  'Iýmit': 'Food Products',
+  Gurluşyk: 'Construction',
+  Suratçylyk: 'Photo & Video',
+  Wideooperator: 'Video Production',
+  Studio: 'Studio',
+  Dizaýn: 'Design & Creative',
+  Atelýe: 'Tailoring & Fashion',
+  Gözellik: 'Beauty Salon',
+  Sport: 'Sports & Fitness',
+  Bilim: 'Education',
+  Turizm: 'Tourism',
+  Awto: 'Automotive',
+  Restoran: 'Restaurant & Coffee',
+  Mebel: 'Furniture',
+  Beýleki: 'Services',
+}
+
+const COLOR_EN = {
+  Fiolet: 'purple',
+  Mawi: 'blue',
+  Gök: 'cyan',
+  Gyzyl: 'red',
+  'Ýaşyl': 'green',
+  'Gara-ak': 'black and white',
+  Gülgüne: 'pink',
+  Narynjy: 'orange',
+  Altyn: 'gold',
+  Gökmawy: 'indigo',
+  Meniw: 'violet',
+  Söhbet: 'teal',
+  'Ýakyn': 'yellow',
+  Goňur: 'brown',
+  Gümüş: 'silver',
+  Reňkli: 'colorful',
+}
+
 function listCredentials() {
   const pairs = []
   const push = (token, account) => {
@@ -149,6 +195,10 @@ export async function aiGenerateDesign(design = {}) {
   const email = design.email || ''
   const ig = design.instagram || ''
 
+  const enName = toLatin(name)
+  const enIndustry = INDUSTRY_EN[industry] || toLatin(industry) || 'Services'
+  const enColor = COLOR_EN[color] || toLatin(color) || 'blue'
+
   const base = {
     business_name: design.business_name || design.name || '',
     industry,
@@ -185,30 +235,33 @@ export async function aiGenerateDesign(design = {}) {
   const contactLine = [contact, email, ig].filter(Boolean).join('  ·  ')
 
   const logoPrompt =
-    `Design a complete professional LOGO for a ${industry} company named "${name}". ` +
-    `The image is SQUARE 1024x1024. Main brand color: ${color}. Style: ${styleHint}. ` +
-    `The logo must include the company name "${name}" written clearly and spelled EXACTLY as given. ` +
-    `Use elegant typography for the name, combined with a matching ${industry} icon/symbol. ` +
+    `Design a complete professional LOGO for a ${enIndustry} company. ` +
+    `The image is SQUARE 1024x1024. Main brand color: ${enColor}. Style: ${styleHint}. ` +
+    `The logo must display the company name as readable text, written EXACTLY like this: "${enName}". ` +
+    `Spell every character of "${enName}" correctly and legibly. ` +
+    `Combine the name with a matching ${enIndustry} icon/symbol in the same style. ` +
     `Composition balanced, premium, flat vector look, crisp edges, ` +
     `no watermark, no frame around the whole image.`
 
   const cardPrompt =
-    `Design a complete professional business card FRONT for a ${industry} company named "${name}". ` +
+    `Design a complete professional business card FRONT for a ${enIndustry} company. ` +
     `The image is WIDE LANDSCAPE 16:10 (1024x640), like a real business card. ` +
-    `Main brand color: ${color}. Style: ${cardStyleHint}. ` +
-    `The card must include the company name "${name}" spelled EXACTLY as given, ` +
-    `the industry "${industry}", ` +
-    `and contact details "${contactLine}" (phone/email/instagram) ` +
-    `all as readable, correctly spelled text. ` +
-    `Premium, professional typography, no watermark, no frame around the whole image.`
+    `Main brand color: ${enColor}. Style: ${cardStyleHint}. ` +
+    `The card must display these texts written EXACTLY and legibly: ` +
+    `the company name "${enName}", ` +
+    `the industry "${enIndustry}", ` +
+    `and the contact line "${contactLine}". ` +
+    `Spell every character correctly, use clean professional typography, ` +
+    `layout balanced, no watermark, no frame around the whole image.`
 
   const backPrompt =
-    `Design a complete professional business card BACK for a ${industry} company named "${name}". ` +
+    `Design a complete professional business card BACK for a ${enIndustry} company. ` +
     `The image is WIDE LANDSCAPE 16:10 (1024x640), like a real business card. ` +
-    `Main brand color: ${color}. Style: ${cardStyleHint}. ` +
-    `The card back must show an elegant monogram with the initials "${initialsOf(name)}" ` +
-    `and the company name "${name}" spelled EXACTLY as given, as readable text. ` +
-    `Premium, professional typography, no watermark, no frame around the whole image.`
+    `Main brand color: ${enColor}. Style: ${cardStyleHint}. ` +
+    `The card back must display a large elegant monogram with the initials "${initialsOf(enName)}" ` +
+    `and the company name "${enName}" written EXACTLY and legibly as readable text. ` +
+    `Spell every character correctly, premium, professional typography, ` +
+    `no watermark, no frame around the whole image.`
 
   if (!isConfigured()) {
     return {
