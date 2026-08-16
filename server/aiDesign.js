@@ -1,50 +1,114 @@
 import { generateLogo, generateCard, generateCardBack, designOptions } from './logo.js'
 
+function listCredentials() {
+  const pairs = []
+  const push = (token, account) => {
+    if (token && account) pairs.push({ token: String(token), account: String(account) })
+  }
+  push(process.env.CF_API_TOKEN, process.env.CF_ACCOUNT_ID)
+  for (let i = 1; i <= 10; i++) {
+    const t = process.env[`CF_API_TOKEN_${i}`]
+    const a = process.env[`CF_ACCOUNT_ID_${i}`]
+    if (t || a) push(t, a)
+    else if (i > 1) break
+  }
+  return pairs
+}
+
 function isConfigured() {
-  return !!(process.env.CF_API_TOKEN && process.env.CF_ACCOUNT_ID)
+  return listCredentials().length > 0
+}
+
+const quotaReset = new Map()
+
+function nextUtcMidnight() {
+  const d = new Date()
+  d.setUTCHours(24, 0, 0, 0)
+  return d.getTime()
+}
+
+function isQuotaError(body) {
+  const errs = body && body.errors
+  if (Array.isArray(errs)) {
+    for (const e of errs) {
+      if (e && (e.code === 4006 || /free allocation|10,000 neurons|quota/i.test(String(e.message || '')))) {
+        return true
+      }
+    }
+  }
+  return /free allocation|10,000 neurons|quota/i.test(JSON.stringify(body || {}))
+}
+
+function markQuotaExhausted(account) {
+  quotaReset.set(account, nextUtcMidnight())
+}
+
+function isQuotaExhausted(account) {
+  const until = quotaReset.get(account)
+  return !!until && Date.now() < until
 }
 
 async function callCF(kind, prompt, attempts = 3) {
-  const token = process.env.CF_API_TOKEN
-  const account = process.env.CF_ACCOUNT_ID
   const model = process.env.CF_AI_MODEL || '@cf/black-forest-labs/flux-1-schnell'
-
+  const creds = listCredentials()
   let lastErr = null
-  for (let i = 0; i < attempts; i++) {
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 90000)
-    try {
-      const res = await fetch(
-        `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(account)}/ai/run/${model}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            prompt,
-            steps: 4,
-          }),
-          signal: controller.signal,
+
+  for (const cred of creds) {
+    if (isQuotaExhausted(cred.account)) continue
+    const { token, account } = cred
+    for (let i = 0; i < attempts; i++) {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 90000)
+      try {
+        const res = await fetch(
+          `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(account)}/ai/run/${model}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              prompt,
+              steps: 4,
+            }),
+            signal: controller.signal,
+          }
+        )
+        if (res.status === 429) {
+          const body = await res.json().catch(() => ({}))
+          if (isQuotaError(body)) {
+            markQuotaExhausted(account)
+            lastErr = new Error('Cloudflare kwota gutardy')
+            break
+          }
+          lastErr = new Error('Cloudflare HTTP 429')
+          await new Promise((r) => setTimeout(r, 1500 * (i + 1)))
+          continue
         }
-      )
-      if (res.status === 429 || res.status === 503) {
-        lastErr = new Error(`Cloudflare HTTP ${res.status}`)
-        await new Promise((r) => setTimeout(r, 1500 * (i + 1)))
-        continue
+        if (res.status === 503) {
+          lastErr = new Error('Cloudflare HTTP 503')
+          await new Promise((r) => setTimeout(r, 1500 * (i + 1)))
+          continue
+        }
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}))
+          throw new Error(
+            (body && body.errors && body.errors[0] && body.errors[0].message) ||
+              `Cloudflare HTTP ${res.status}`
+          )
+        }
+        const data = await res.json()
+        const b64 = data?.result?.image
+        if (!b64) throw new Error('Cloudflare boş jogap')
+        const raw = String(b64).replace(/^data:image\/(png|jpe?g);base64,/, '')
+        return `data:image/jpeg;base64,${raw}`
+      } catch (e) {
+        lastErr = e
+        if (e.name === 'AbortError') await new Promise((r) => setTimeout(r, 1000))
+      } finally {
+        clearTimeout(timer)
       }
-      if (!res.ok) throw new Error(`Cloudflare HTTP ${res.status}`)
-      const data = await res.json()
-      const b64 = data?.result?.image
-      if (!b64) throw new Error('Cloudflare boş jogap')
-      const raw = String(b64).replace(/^data:image\/(png|jpe?g);base64,/, '')
-      return `data:image/jpeg;base64,${raw}`
-    } catch (e) {
-      lastErr = e
-      if (e.name === 'AbortError') await new Promise((r) => setTimeout(r, 1000))
-    } finally {
-      clearTimeout(timer)
     }
   }
   throw lastErr || new Error('Cloudflare AI işlemedi')
@@ -166,8 +230,9 @@ export async function aiGenerateDesign(design = {}) {
 }
 
 export function aiDesignStatus() {
+  const creds = listCredentials()
   return {
-    ai: isConfigured(),
-    provider: isConfigured() ? 'Cloudflare AI (FLUX.1 Schnell)' : null,
+    ai: creds.length > 0,
+    provider: creds.length ? `Cloudflare AI (FLUX.1 Schnell) [${creds.length} açar]` : null,
   }
 }
