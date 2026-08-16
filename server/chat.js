@@ -28,15 +28,15 @@ function isConfigured() {
   return !!(process.env.USER_LLM_API_KEY && process.env.USER_LLM_BASE_URL)
 }
 
-async function callLLM(messages, attempts = 3) {
+async function callLLM(messages, attempts = 5) {
   const apiKey = process.env.USER_LLM_API_KEY
-  const baseUrl = (process.env.USER_LLM_BASE_URL || 'https://api.deepseek.com/v1').replace(/\/$/, '')
-  const model = process.env.USER_LLM_MODEL || 'deepseek-chat'
+  const baseUrl = (process.env.USER_LLM_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta/openai').replace(/\/$/, '')
+  const model = process.env.USER_LLM_MODEL || 'gemini-3.5-flash'
 
   let lastErr = null
   for (let i = 0; i < attempts; i++) {
     const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 30000)
+    const timer = setTimeout(() => controller.abort(), 45000)
     try {
       const res = await fetch(`${baseUrl}/chat/completions`, {
         method: 'POST',
@@ -54,7 +54,7 @@ async function callLLM(messages, attempts = 3) {
       })
       if (res.status === 429 || res.status === 503) {
         lastErr = new Error(`LLM HTTP ${res.status}`)
-        await new Promise((r) => setTimeout(r, 1200 * (i + 1)))
+        await new Promise((r) => setTimeout(r, 2000 * (i + 1)))
         continue
       }
       if (!res.ok) throw new Error(`LLM HTTP ${res.status}`)
@@ -64,7 +64,7 @@ async function callLLM(messages, attempts = 3) {
       return String(text).trim()
     } catch (e) {
       lastErr = e
-      if (e.name === 'AbortError') await new Promise((r) => setTimeout(r, 800))
+      if (e.name === 'AbortError') await new Promise((r) => setTimeout(r, 1500))
     } finally {
       clearTimeout(timer)
     }
