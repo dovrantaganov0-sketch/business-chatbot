@@ -126,7 +126,7 @@ export function sanitizeSVG(svg) {
     out += ch
     if (ch === '>') inTag = false
   }
-  return out
+  return out.replace(/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-f]+);)/gi, '&amp;')
 }
 
 const WATERMARK_RE = /<g opacity="0\.45">[\s\S]*?<\/g>/g

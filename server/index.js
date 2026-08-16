@@ -32,6 +32,7 @@ import {
 } from './logo.js'
 import { aiGenerateDesign, aiDesignStatus } from './aiDesign.js'
 import { chatReply, chatStatus } from './chat.js'
+import { seedWorksIfEmpty } from './seed-works.js'
 const app = express()
 const PORT = process.env.PORT || 3001
 
@@ -517,7 +518,8 @@ app.use('/api', (req, res) => {
   res.status(404).json({ error: 'API ýoly tapylmady' })
 })
 
-const UPLOADS_DIR = path.join(__dirname, 'data', 'uploads')
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data')
+const UPLOADS_DIR = path.join(DATA_DIR, 'uploads')
 app.use('/uploads', express.static(UPLOADS_DIR))
 
 app.use(express.static(CLIENT_DIST))
@@ -529,3 +531,5 @@ app.get(/^\/(?!api\/).*/, (req, res) => {
 app.listen(PORT, () => {
   console.log(`BIRDE API ${PORT} portda işleýär`)
 })
+
+seedWorksIfEmpty()
