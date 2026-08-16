@@ -336,10 +336,18 @@ app.post('/api/design/generate', async (req, res) => {
 
   const generated = await aiGenerateDesign(design)
   if (generated.ai) {
-    design.images = {
-      logo: generated.images.logo,
-      card: generated.images.card,
-      cardBack: generated.images.cardBack,
+    if (generated.images) {
+      design.images = {
+        logo: generated.images.logo,
+        card: generated.images.card,
+        cardBack: generated.images.cardBack,
+      }
+    } else {
+      design.svg = {
+        logo: generated.logo,
+        card: generated.cardFront,
+        cardBack: generated.cardBack,
+      }
     }
     design.ai = true
   }
@@ -396,10 +404,18 @@ app.post('/api/design/:id/regenerate', async (req, res) => {
   delete design.images
   const generated = await aiGenerateDesign(design)
   if (generated.ai) {
-    design.images = {
-      logo: generated.images.logo,
-      card: generated.images.card,
-      cardBack: generated.images.cardBack,
+    if (generated.images) {
+      design.images = {
+        logo: generated.images.logo,
+        card: generated.images.card,
+        cardBack: generated.images.cardBack,
+      }
+    } else {
+      design.svg = {
+        logo: generated.logo,
+        card: generated.cardFront,
+        cardBack: generated.cardBack,
+      }
     }
     design.ai = true
   }
