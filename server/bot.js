@@ -106,6 +106,42 @@ const KEYWORDS = [
     reply: () => VALUE_TEXT,
   },
   {
+    key: 'mahabat',
+    priority: true,
+    words: ['mahabat', 'reklam', 'reklama', 'реклам', 'advertising', 'promo', 'ündeýji', 'tanat'],
+    reply: () =>
+      'Mahabat — işiňiziň ösüşiniň iň güýçli guraly! 📣\n\n' +
+      'Mahabatyň peýdasy:\n' +
+      '• Tanatmak — adamlara siziň baradygyňyzy we nämäni hödürleýändigiňizi aýdýar\n' +
+      '• Müşderi çekmek — satuwy artdyrýar, täze müşderiler getirýär\n' +
+      '• Ýatda galmak — brendiňizi yzygiderli görsäňler, sizi saýlap alýarlar\n' +
+      '• Bäsdeşlerden aýrylmak — özboluşlylygyňyzy görkezýär\n' +
+      '• Ynam döretmek — hünärmen görnüşdäki mahabat ynam berýär\n\n' +
+      'Nireden başlamaly:\n' +
+      '1. Gowy logo we brend görnüşi (wizitka, sosial media şablonlary)\n' +
+      '2. Instagram / TikTok akkaunt — yzygiderli postlar we storiler\n' +
+      '3. Reklama kampaniýalary (targetleşdirilen mahabat)\n\n' +
+      'BIRDE size logo, wizitka we sosial media postlary taýýarlap berýär — mahabatyňyzyň esasyny döredýäris. "sargyt" ýazyň.',
+  },
+  {
+    key: 'biznes',
+    priority: true,
+    words: ['biznes ideýa', 'biznes ideý', 'ideýa', 'ideya', 'idea', 'бизнес иде', 'kiçi biznes', 'small business', 'näme etmeli', 'iş aç'],
+    reply: () =>
+      'Kiçi biznes ideýalary — kiçi maýa bilen başlap bolýan ugurlar! 💡\n\n' +
+      'Türkmenistana laýyk ideýalar:\n' +
+      '1. Onlaýn söwda (wiber) — önümleri Instagram/TikTok arkaly satmak. Başlamak: bir-iki önüm saýla, surata düşür, sahypa aç.\n' +
+      '2. Aşpezlik / öý iýmitleri — halk köpçüligine iýmit taýýarlap satmak. Başlamak: ýöriteleşen iýmitiňizden başlaň.\n' +
+      '3. Suratçylyk we wideo — nika, wagtlaýyn suratlar, önüm suratlary. Başlamak: telefon bilen başlap, portfeliňizi ýygnap başlaň.\n' +
+      '4. Sosial media menedžment (SMM) — beýleki edaralara sahypalaryny ýöretmek. Başlamak: öz sahypaňyzda tejribe toplaň.\n' +
+      '5. Gözellik hyzmatlary — manikýur, saç, brij. Başlamak: kurs okaň, ilki tanşylara ediň.\n' +
+      '6. Okuw we repetitorlyk — iňlis dili, kompýuter, okuw sapaklary. Başlamak: onlaýn ýa-da ýüzbe-ýüz sapaklar.\n' +
+      '7. Awto serwis ýa-da detaliň — ulag söýýänlere hyzmat. Başlamak: kiçi gural toplumy we mahabat.\n' +
+      '8. Kofe / çörek önümleri — iş ýerleriniň ýanynda kiçi nokat. Başlamak: mobil ýa-da kiçi kiosk.\n\n' +
+      'Islendik ideýa üçin iň wajyp zat — görnükli brend: logo, wizitka, sosial media sahypa. ' +
+      'Şonda müşderiler size ynanýar. BIRDE size şol esaslary taýýarlap berýär. "sargyt" ýazyň.',
+  },
+  {
     key: 'sargyt',
     words: ['sargyt', 'order', 'заказ', 'zakaz', 'satyn al', 'покуп', 'хочу'],
     reply: () =>
