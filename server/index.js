@@ -218,14 +218,75 @@ const DESIGN_SIZES = {
   cardBack: { vw: 856, vh: 540 },
 }
 
+function svgEsc(s = '') {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function initials(s = '') {
+  const parts = String(s).trim().split(/\s+/).filter(Boolean)
+  if (!parts.length) return 'BI'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[1][0]).toUpperCase()
+}
+
+function fontStack() {
+  return 'Arial, Helvetica, "Segoe UI", sans-serif'.replace(/"/g, '&quot;')
+}
+
+function overlayRect(w, h, opacity) {
+  return `<rect x="0" y="0" width="${w}" height="${h}" fill="#0b0d12" opacity="${opacity}"/>`
+}
+
 function pngBackgroundSVG(imgDataUri, kind, cfg, final = false) {
   const { vw, vh } = DESIGN_SIZES[kind] || DESIGN_SIZES.card
   const cx = vw / 2
-  const cy = vh / 2
+  const name = svgEsc(cfg.name || cfg.business_name || '')
+  const industry = svgEsc(cfg.industry || '')
+  const contactLines = [cfg.phone, cfg.email, cfg.instagram].filter(Boolean)
+  const inner = []
+
+  if (kind === 'logo') {
+    inner.push(overlayRect(vw, vh, 0.42))
+    inner.push(
+      `<text x="${cx}" y="${Math.round(vh * 0.56)}" font-family="${fontStack()}" font-weight="800" font-size="64" fill="#ffffff" text-anchor="middle" letter-spacing="2">${name}</text>`
+    )
+    inner.push(
+      `<text x="${cx}" y="${Math.round(vh * 0.65)}" font-family="${fontStack()}" font-weight="600" font-size="22" fill="#e2e8f0" letter-spacing="6" text-anchor="middle">${industry}</text>`
+    )
+  } else if (kind === 'card') {
+    inner.push(overlayRect(vw, vh, 0.42))
+    inner.push(
+      `<text x="${cx}" y="${Math.round(vh * 0.30)}" font-family="${fontStack()}" font-weight="800" font-size="46" fill="#ffffff" text-anchor="middle" letter-spacing="2">${name}</text>`
+    )
+    inner.push(
+      `<text x="${cx}" y="${Math.round(vh * 0.40)}" font-family="${fontStack()}" font-weight="600" font-size="20" fill="#e2e8f0" letter-spacing="4" text-anchor="middle">${industry}</text>`
+    )
+    if (contactLines.length) {
+      inner.push(
+        `<text x="${cx}" y="${Math.round(vh * 0.75)}" font-family="${fontStack()}" font-weight="500" font-size="18" fill="#f8fafc" text-anchor="middle">${svgEsc(contactLines.join('  ·  '))}</text>`
+      )
+    }
+  } else {
+    inner.push(overlayRect(vw, vh, 0.45))
+    inner.push(
+      `<text x="${cx}" y="${Math.round(vh * 0.42)}" font-family="${fontStack()}" font-weight="900" font-size="70" fill="#ffffff" text-anchor="middle" letter-spacing="3">${svgEsc(initials(name))}</text>`
+    )
+    inner.push(
+      `<text x="${cx}" y="${Math.round(vh * 0.56)}" font-family="${fontStack()}" font-weight="700" font-size="28" fill="#e2e8f0" letter-spacing="2" text-anchor="middle">${name}</text>`
+    )
+    inner.push(
+      `<text x="${cx}" y="${Math.round(vh * 0.64)}" font-family="${fontStack()}" font-weight="500" font-size="15" fill="#cbd5e1" letter-spacing="4" text-anchor="middle">${industry}</text>`
+    )
+  }
 
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${vw} ${vh}" width="${vw}" height="${vh}">` +
     `<image href="${imgDataUri}" x="0" y="0" width="${vw}" height="${vh}" preserveAspectRatio="xMidYMid slice"/>` +
+    inner.join('') +
     (final ? '' : watermark(vw, vh)) +
     '</svg>'
   )
