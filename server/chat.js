@@ -28,11 +28,22 @@ function isConfigured() {
   return !!(process.env.USER_LLM_API_KEY && process.env.USER_LLM_BASE_URL)
 }
 
-async function callLLM(messages, attempts = 5) {
-  const apiKey = process.env.USER_LLM_API_KEY
-  const baseUrl = (process.env.USER_LLM_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta/openai').replace(/\/$/, '')
-  const model = process.env.USER_LLM_MODEL || 'gemini-3.5-flash'
+function listGroqKeys() {
+  const keys = []
+  const push = (k) => {
+    const s = String(k || '')
+    if (s && s.length >= 8 && !/^PENDING/i.test(s)) keys.push(s)
+  }
+  push(process.env.GROQ_API_KEY)
+  for (let i = 1; i <= 10; i++) {
+    const k = process.env[`GROQ_API_KEY_${i}`]
+    if (k) push(k)
+    else if (i > 1) break
+  }
+  return keys
+}
 
+async function callProvider(baseUrl, apiKey, model, messages, attempts = 3) {
   let lastErr = null
   for (let i = 0; i < attempts; i++) {
     const controller = new AbortController()
@@ -53,14 +64,14 @@ async function callLLM(messages, attempts = 5) {
         signal: controller.signal,
       })
       if (res.status === 429 || res.status === 503) {
-        lastErr = new Error(`LLM HTTP ${res.status}`)
+        lastErr = new Error(`${model} HTTP ${res.status}`)
         await new Promise((r) => setTimeout(r, 2000 * (i + 1)))
         continue
       }
-      if (!res.ok) throw new Error(`LLM HTTP ${res.status}`)
+      if (!res.ok) throw new Error(`${model} HTTP ${res.status}`)
       const data = await res.json()
       const text = data?.choices?.[0]?.message?.content
-      if (!text) throw new Error('LLM boş jogap')
+      if (!text) throw new Error(`${model} boş jogap`)
       return String(text).trim()
     } catch (e) {
       lastErr = e
@@ -69,13 +80,40 @@ async function callLLM(messages, attempts = 5) {
       clearTimeout(timer)
     }
   }
+  throw lastErr || new Error(`${model} işlemedi`)
+}
+
+async function callLLM(messages) {
+  const apiKey = process.env.USER_LLM_API_KEY
+  const baseUrl = (process.env.USER_LLM_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta/openai').replace(/\/$/, '')
+  const model = process.env.USER_LLM_MODEL || 'gemini-3.5-flash'
+  let lastErr = null
+
+  if (apiKey) {
+    try {
+      return await callProvider(baseUrl, apiKey, model, messages, 5)
+    } catch (e) {
+      lastErr = e
+    }
+  }
+
+  const groqModel = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'
+  for (const key of listGroqKeys()) {
+    try {
+      return await callProvider('https://api.groq.com/openai/v1', key, groqModel, messages, 3)
+    } catch (e) {
+      lastErr = e
+    }
+  }
+
   throw lastErr || new Error('LLM işlemedi')
 }
 
 export async function chatReply(userText = '', history = []) {
   const configured = isConfigured()
+  const hasGroq = listGroqKeys().length > 0
 
-  if (configured) {
+  if (configured || hasGroq) {
     try {
       const messages = [{ role: 'system', content: SYSTEM_PROMPT }]
       const tail = Array.isArray(history) ? history.slice(-8) : []
@@ -98,8 +136,11 @@ export async function chatReply(userText = '', history = []) {
 }
 
 export function chatStatus() {
+  const parts = []
+  if (isConfigured()) parts.push(process.env.USER_LLM_MODEL || 'custom')
+  if (listGroqKeys().length) parts.push(process.env.GROQ_MODEL || 'llama-3.3-70b-versatile')
   return {
-    ai: isConfigured(),
-    provider: process.env.USER_LLM_MODEL || (process.env.USER_LLM_BASE_URL ? 'custom' : null),
+    ai: isConfigured() || listGroqKeys().length > 0,
+    provider: parts.length ? parts.join(' + ') : null,
   }
 }

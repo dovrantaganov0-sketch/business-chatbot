@@ -62,22 +62,7 @@ function listCredentials() {
 }
 
 function isConfigured() {
-  return listCredentials().length > 0 || listNVCreds().length > 0
-}
-
-function listNVCreds() {
-  const keys = []
-  const push = (k) => {
-    const s = String(k || '')
-    if (s && s.length >= 8 && !/^PENDING/i.test(s)) keys.push(s)
-  }
-  push(process.env.NV_API_KEY)
-  for (let i = 1; i <= 10; i++) {
-    const k = process.env[`NV_API_KEY_${i}`]
-    if (k) push(k)
-    else if (i > 1) break
-  }
-  return keys
+  return listCredentials().length > 0
 }
 
 const quotaReset = new Map()
@@ -185,88 +170,6 @@ async function callCF(kind, prompt, attempts = 3) {
   throw lastErr || new Error('Cloudflare AI işlemedi')
 }
 
-const NV_QUOTA_RE = /quota|credit|payment|insufficient|limit|402/i
-
-function isNVQuotaError(status, bodyText) {
-  if (status === 402) return true
-  return NV_QUOTA_RE.test(String(bodyText || ''))
-}
-
-async function callLLM(prompt, attempts = 3) {
-  const baseUrl = (process.env.NV_API_BASE_URL || 'https://integrate.api.nvidia.com/v1').replace(/\/$/, '')
-  const model = process.env.NV_LLM_MODEL || 'nvidia/llama-3.3-nemotron-super-49b-v1'
-  const creds = listNVCreds()
-  let lastErr = null
-
-  for (const token of creds) {
-    if (isQuotaExhausted('nv:' + token)) continue
-    for (let i = 0; i < attempts; i++) {
-      const controller = new AbortController()
-      const timer = setTimeout(() => controller.abort(), 60000)
-      try {
-        const res = await fetch(`${baseUrl}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            model,
-            messages: [
-              {
-                role: 'system',
-                content:
-                  'Sen AAAA derejeli professional SVG brend dizaýneri we tipografsy. ' +
-                  'DIŇE bir sany doly, ulanylmaga taýýar <svg>...</svg> kody gaytar — başga hiç zat (markdown, düşündiriş, sözbaşy) ýazma. ' +
-                  'Ähli atributlar doly, tekstler &amp; &lt; &gt; bilen goragly, ýapylan tegler. ' +
-                  'Kompaniýa ady we ähli tekstler DIŇE soraýjynyň beren maglumatlary — başga hiç zat goşma. ' +
-                  'Teksti doly, takyk, ýalňyşsyz ýaz. ' +
-                  'Şrift adyny Arial, Helvetica, Georgia ýa-da generic serif/sans-serif edip goý — başga şrift adyny goşma.',
-              },
-              { role: 'user', content: prompt },
-            ],
-            temperature: 0.7,
-            max_tokens: 6000,
-          }),
-          signal: controller.signal,
-        })
-        if (res.status === 429 || res.status === 402) {
-          const bodyText = await res.text().catch(() => '')
-          if (isNVQuotaError(res.status, bodyText)) {
-            markQuotaExhausted('nv:' + token)
-            lastErr = new Error('NVIDIA kwota gutardy')
-            break
-          }
-          lastErr = new Error(`NVIDIA HTTP ${res.status}`)
-          await new Promise((r) => setTimeout(r, 1500 * (i + 1)))
-          continue
-        }
-        if (res.status === 503) {
-          lastErr = new Error('NVIDIA HTTP 503')
-          await new Promise((r) => setTimeout(r, 1500 * (i + 1)))
-          continue
-        }
-        if (!res.ok) throw new Error(`NVIDIA HTTP ${res.status}`)
-        const data = await res.json()
-        const text = data?.choices?.[0]?.message?.content
-        if (!text || !String(text).trim()) throw new Error('NVIDIA boş jogap')
-        return String(text).trim()
-      } catch (e) {
-        lastErr = e
-        if (e.name === 'AbortError') await new Promise((r) => setTimeout(r, 1000))
-      } finally {
-        clearTimeout(timer)
-      }
-    }
-  }
-  throw lastErr || new Error('NVIDIA AI işlemedi')
-}
-
-function extractSVG(text = '') {
-  const m = String(text).match(/<svg[\s\S]*?<\/svg>/i)
-  if (!m) throw new Error('SVG tapylmady')
-  return m[0]
-}
 
 function safeTitle(s) {
   return String(s || '')
@@ -417,7 +320,6 @@ export async function aiGenerateDesign(design = {}) {
   }
 
   const cfCreds = listCredentials()
-  const nvCreds = listNVCreds()
 
   if (cfCreds.length > 0) {
     try {
@@ -436,20 +338,7 @@ export async function aiGenerateDesign(design = {}) {
         base,
       }
     } catch (e) {
-      console.error('[aiDesign] Cloudflare başa barmady, NVIDIA synanýar:', String(e.message || e))
-    }
-  }
-
-  if (nvCreds.length > 0) {
-    try {
-      const [logo, cardFront, cardBack] = await Promise.all([
-        callLLM(logoSvgPrompt).then(extractSVG).then(sanitizeSVG),
-        callLLM(cardSvgPrompt).then(extractSVG).then(sanitizeSVG),
-        callLLM(backSvgPrompt).then(extractSVG).then(sanitizeSVG),
-      ])
-      return { ok: true, ai: true, logo, cardFront, cardBack, base }
-    } catch (e) {
-      console.error('[aiDesign] NVIDIA başa barmady, şablona gaýdýar:', String(e.message || e))
+      console.error('[aiDesign] Cloudflare başa barmady, şablona gaýdýar:', String(e.message || e))
     }
   }
 
@@ -466,16 +355,12 @@ export async function aiGenerateDesign(design = {}) {
 
 export function aiDesignStatus() {
   const cfCreds = listCredentials()
-  const nvCreds = listNVCreds()
   const parts = []
   if (cfCreds.length) {
     parts.push(`Cloudflare (${process.env.CF_AI_MODEL || '@cf/leonardo/lucid-origin'}) [${cfCreds.length} açar]`)
   }
-  if (nvCreds.length) {
-    parts.push(`NVIDIA (${process.env.NV_LLM_MODEL || 'nvidia/llama-3.3-nemotron-super-49b-v1'}) [${nvCreds.length} açar]`)
-  }
   return {
-    ai: cfCreds.length > 0 || nvCreds.length > 0,
+    ai: cfCreds.length > 0,
     provider: parts.length ? parts.join(' + ') : null,
   }
 }
