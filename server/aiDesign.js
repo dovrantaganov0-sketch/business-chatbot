@@ -233,6 +233,19 @@ export async function aiGenerateDesign(design = {}) {
   const cardStyleHint = cardStyleHints[card_style] || 'professional elegant business card'
 
   const contactLine = [contact, email, ig].filter(Boolean).join('  ·  ')
+  const contactItems = []
+  if (contact) contactItems.push(`phone number EXACTLY as written: "${contact}"`)
+  if (email) contactItems.push(`email EXACTLY as written: "${email}"`)
+  if (ig) contactItems.push(`instagram EXACTLY as written: "${ig}"`)
+
+  const forbiddenText =
+    `STRICT RULES: Render ONLY the exact texts listed above, and nothing else. ` +
+    `Never invent, guess, substitute, or add anything. ` +
+    `Never create extra company names, slogans, taglines, words, or phrases. ` +
+    `Never add any phone number, home number, fax, address, website, or social handle ` +
+    `that is not listed above. Every digit of the given phone number and every character ` +
+    `of the given email must be preserved exactly — do not change, drop, or add any digit. ` +
+    `Do not repeat, rewrite, or rearrange the given texts. `
 
   const logoPrompt =
     `Design a complete professional LOGO for a ${enIndustry} company. ` +
@@ -240,6 +253,7 @@ export async function aiGenerateDesign(design = {}) {
     `The logo must display the company name as readable text, written EXACTLY like this: "${enName}". ` +
     `Spell every character of "${enName}" correctly and legibly. ` +
     `Combine the name with a matching ${enIndustry} icon/symbol in the same style. ` +
+    forbiddenText +
     `Composition balanced, premium, flat vector look, crisp edges, ` +
     `no watermark, no frame around the whole image.`
 
@@ -247,10 +261,12 @@ export async function aiGenerateDesign(design = {}) {
     `Design a complete professional business card FRONT for a ${enIndustry} company. ` +
     `The image is WIDE LANDSCAPE 16:10 (1024x640), like a real business card. ` +
     `Main brand color: ${enColor}. Style: ${cardStyleHint}. ` +
-    `The card must display these texts written EXACTLY and legibly: ` +
-    `the company name "${enName}", ` +
-    `the industry "${enIndustry}", ` +
-    `and the contact line "${contactLine}". ` +
+    `The card must display ONLY these exact texts and NOTHING ELSE: ` +
+    `1) company name "${enName}", ` +
+    `2) industry "${enIndustry}", ` +
+    `3) the contact line exactly as a single line of text: "${contactLine}". ` +
+    `The contact line consists of these exact items: ${contactItems.join('; ')}. ` +
+    forbiddenText +
     `Spell every character correctly, use clean professional typography, ` +
     `layout balanced, no watermark, no frame around the whole image.`
 
@@ -258,8 +274,9 @@ export async function aiGenerateDesign(design = {}) {
     `Design a complete professional business card BACK for a ${enIndustry} company. ` +
     `The image is WIDE LANDSCAPE 16:10 (1024x640), like a real business card. ` +
     `Main brand color: ${enColor}. Style: ${cardStyleHint}. ` +
-    `The card back must display a large elegant monogram with the initials "${initialsOf(enName)}" ` +
+    `The card back must display ONLY a large elegant monogram with the initials "${initialsOf(enName)}" ` +
     `and the company name "${enName}" written EXACTLY and legibly as readable text. ` +
+    forbiddenText +
     `Spell every character correctly, premium, professional typography, ` +
     `no watermark, no frame around the whole image.`
 
