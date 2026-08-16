@@ -131,6 +131,13 @@ function safeTitle(s) {
     .slice(0, 60) || 'logo'
 }
 
+function initialsOf(s = '') {
+  const parts = String(s).trim().split(/\s+/).filter(Boolean)
+  if (!parts.length) return 'BI'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[1][0]).toUpperCase()
+}
+
 export async function aiGenerateDesign(design = {}) {
   const opts = designOptions()
   const name = safeTitle(design.business_name || design.name || '')
@@ -154,52 +161,54 @@ export async function aiGenerateDesign(design = {}) {
   }
 
   const styleHints = {
-    monogram: 'elegant abstract geometric emblem motif with overlapping shapes and a luxurious feel',
-    minimal: 'minimalist clean abstract composition with simple lines and lots of negative space',
-    badge: 'badge / crest shaped ornamental frame decoration',
-    boxed: 'geometric frame / box border decoration with balanced symmetry',
-    line: 'thin elegant line art geometric decoration',
-    neon: 'vibrant neon glow light streaks on a dark background',
-    gold: 'premium gold foil elegant flowing metallic ribbon shapes',
-    retro: 'retro vintage ornamental pattern with classic symmetrical art',
-    circle: 'concentric circles and circular geometric patterns',
+    monogram: 'elegant monogram emblem motif with overlapping letters and a luxurious feel',
+    minimal: 'minimalist clean logo composition with simple lines and lots of negative space',
+    badge: 'badge / crest shaped logo with an ornamental frame',
+    boxed: 'geometric frame / box border logo with balanced symmetry',
+    line: 'thin elegant line art geometric logo',
+    neon: 'vibrant neon glow light streaks logo on a dark background',
+    gold: 'premium gold foil elegant flowing metallic ribbon logo',
+    retro: 'retro vintage ornamental logo with classic symmetrical art',
+    circle: 'concentric circles and circular geometric logo pattern',
   }
-  const styleHint = styleHints[style] || 'modern professional abstract decoration'
+  const styleHint = styleHints[style] || 'modern professional abstract logo'
 
   const cardStyleHints = {
-    modern: 'modern clean abstract gradient background with soft shapes',
-    premium: 'premium elegant background with gold accents and silk textures',
-    minimal: 'minimalist soft subtle background with lots of clean space',
-    bold: 'bold vibrant abstract background with energetic color blocks',
-    classic: 'classic timeless elegant background with fine ornamental lines',
+    modern: 'modern clean professional business card layout',
+    premium: 'premium elegant business card with gold accents and silk textures',
+    minimal: 'minimalist soft subtle business card with lots of clean space',
+    bold: 'bold vibrant business card with energetic color blocks',
+    classic: 'classic timeless business card with fine ornamental lines',
   }
-  const cardStyleHint = cardStyleHints[card_style] || 'professional elegant background'
+  const cardStyleHint = cardStyleHints[card_style] || 'professional elegant business card'
+
+  const contactLine = [contact, email, ig].filter(Boolean).join('  ·  ')
 
   const logoPrompt =
-    `A beautiful abstract decorative BACKGROUND for a professional LOGO of a ${industry} company. ` +
+    `Design a complete professional LOGO for a ${industry} company named "${name}". ` +
     `The image is SQUARE 1024x1024. Main brand color: ${color}. Style: ${styleHint}. ` +
-    `Decorative only: geometric shapes, gradients, soft shapes, flowing lines. ` +
-    `NO TEXT, NO LETTERS, NO WORDS, NO CHARACTERS, NO NUMBERS, NO LOGOTYPE — strictly no writing anywhere. ` +
-    `Composition leaves a clean calm empty area in the CENTER for a company name to be placed on top. ` +
-    `High quality, premium, flat vector look, crisp edges, no watermark, no frame around the whole image.`
+    `The logo must include the company name "${name}" written clearly and spelled EXACTLY as given. ` +
+    `Use elegant typography for the name, combined with a matching ${industry} icon/symbol. ` +
+    `Composition balanced, premium, flat vector look, crisp edges, ` +
+    `no watermark, no frame around the whole image.`
 
   const cardPrompt =
-    `A beautiful abstract decorative BACKGROUND for a professional business card FRONT, ${industry} company. ` +
+    `Design a complete professional business card FRONT for a ${industry} company named "${name}". ` +
     `The image is WIDE LANDSCAPE 16:10 (1024x640), like a real business card. ` +
     `Main brand color: ${color}. Style: ${cardStyleHint}. ` +
-    `Decorative only: gradient, soft shapes, subtle texture. ` +
-    `NO TEXT, NO LETTERS, NO WORDS, NO CHARACTERS, NO NUMBERS — strictly no writing anywhere. ` +
-    `The center area stays calm and empty so a company name and contact lines can be placed on top. ` +
-    `Premium look, no watermark, no frame around the whole image.`
+    `The card must include the company name "${name}" spelled EXACTLY as given, ` +
+    `the industry "${industry}", ` +
+    `and contact details "${contactLine}" (phone/email/instagram) ` +
+    `all as readable, correctly spelled text. ` +
+    `Premium, professional typography, no watermark, no frame around the whole image.`
 
   const backPrompt =
-    `A beautiful abstract decorative BACKGROUND for a professional business card BACK, ${industry} company. ` +
+    `Design a complete professional business card BACK for a ${industry} company named "${name}". ` +
     `The image is WIDE LANDSCAPE 16:10 (1024x640), like a real business card. ` +
     `Main brand color: ${color}. Style: ${cardStyleHint}. ` +
-    `Decorative only: subtle gradient, elegant geometric motifs, soft glow. ` +
-    `NO TEXT, NO LETTERS, NO WORDS, NO CHARACTERS, NO NUMBERS — strictly no writing anywhere. ` +
-    `The center stays calm and empty so a monogram and name can be placed on top. ` +
-    `Premium look, no watermark, no frame around the whole image.`
+    `The card back must show an elegant monogram with the initials "${initialsOf(name)}" ` +
+    `and the company name "${name}" spelled EXACTLY as given, as readable text. ` +
+    `Premium, professional typography, no watermark, no frame around the whole image.`
 
   if (!isConfigured()) {
     return {
