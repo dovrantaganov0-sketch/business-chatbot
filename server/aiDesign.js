@@ -48,6 +48,15 @@ function isQuotaExhausted(account) {
   return !!until && Date.now() < until
 }
 
+const IMAGE_SIZES = {
+  logo: { width: 1024, height: 1024 },
+  card: { width: 1024, height: 640 },
+  cardBack: { width: 1024, height: 640 },
+}
+
+const NEGATIVE_PROMPT =
+  'text, letters, words, characters, numbers, watermark, signature, caption, frame, border, logo'
+
 async function callCF(kind, prompt, attempts = 3) {
   const model = process.env.CF_AI_MODEL || '@cf/black-forest-labs/flux-1-schnell'
   const creds = listCredentials()
@@ -70,7 +79,9 @@ async function callCF(kind, prompt, attempts = 3) {
             },
             body: JSON.stringify({
               prompt,
+              negative_prompt: NEGATIVE_PROMPT,
               steps: 4,
+              ...(IMAGE_SIZES[kind] || IMAGE_SIZES.logo),
             }),
             signal: controller.signal,
           }
@@ -176,18 +187,20 @@ export async function aiGenerateDesign(design = {}) {
   const cardPrompt =
     `Beautiful abstract decorative BACKGROUND for a professional business card FRONT, ${industry} company. ` +
     `Main brand color: ${color}. Style: ${cardStyleHint}. ` +
+    `WIDE LANDSCAPE horizontal format, like a real business card (ratio 16:10). ` +
     `This is a decorative background only: gradient, soft shapes, subtle texture. ` +
     `NO TEXT, NO LETTERS, NO WORDS, NO CHARACTERS, NO NUMBERS, NO CONTACT INFO — strictly no writing anywhere. ` +
-    `The center area should be clean and calm so a company name and contact lines can be placed on top. ` +
-    `Landscape business card proportions, premium look, no watermark, no frame around the whole image.`
+    `The center-left area should be clean and calm so a company name and contact lines can be placed on top. ` +
+    `Premium look, no watermark, no frame around the whole image.`
 
   const backPrompt =
     `Beautiful abstract decorative BACKGROUND for a professional business card BACK, ${industry} company. ` +
     `Main brand color: ${color}. Style: ${cardStyleHint}. ` +
+    `WIDE LANDSCAPE horizontal format, like a real business card (ratio 16:10). ` +
     `This is a decorative background only: subtle gradient, elegant geometric motifs, soft glow. ` +
     `NO TEXT, NO LETTERS, NO WORDS, NO CHARACTERS, NO NUMBERS — strictly no writing anywhere. ` +
     `The center should be calm and empty so a monogram and name can be placed on top. ` +
-    `Landscape business card proportions, premium look, no watermark, no frame around the whole image.`
+    `Premium look, no watermark, no frame around the whole image.`
 
   if (!isConfigured()) {
     return {

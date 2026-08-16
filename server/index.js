@@ -243,8 +243,8 @@ function watermark(vw, vh) {
 
 const DESIGN_SIZES = {
   logo: { vw: 850, vh: 850 },
-  card: { vw: 850, vh: 550 },
-  cardBack: { vw: 850, vh: 550 },
+  card: { vw: 864, vh: 540 },
+  cardBack: { vw: 864, vh: 540 },
 }
 
 function pngBackgroundSVG(imgDataUri, kind, cfg, final = false) {
